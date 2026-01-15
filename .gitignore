@@ -1,0 +1,7 @@
+# ===== Visual Studio cache / build outputs =====
+.vs/
+bin/
+obj/
+
+# User-specific settings
+*.user

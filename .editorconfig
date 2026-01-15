@@ -1,0 +1,17 @@
+﻿root = true
+
+[*]
+end_of_line = crlf
+indent_style = space
+indent_size = 4
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[*.{h,cpp,hpp,c}]
+charset = utf-8-bom
+indent_style = tab
+indent_size = 4
+
+[*.{hlsl,hlsli}]
+indent_style = space
+indent_size = 4

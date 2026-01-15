@@ -1,0 +1,330 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Core">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader">
+      <UniqueIdentifier>{1c45f08e-dc1b-4fe2-a99d-a5ce754f4a2b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Graphics">
+      <UniqueIdentifier>{9835d395-a92f-4b98-929b-a5318ac0ccbc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\System">
+      <UniqueIdentifier>{8d828e50-e841-4f86-bdb0-38896e81e0db}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Audio">
+      <UniqueIdentifier>{933ca803-cc61-4d7b-a6e9-f27ba4e4f6f1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Scene">
+      <UniqueIdentifier>{8b89a01f-cffb-40a0-b369-caf18080a031}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Math">
+      <UniqueIdentifier>{0a4a1e26-6a78-4189-8053-ff8a6d21aa73}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Object">
+      <UniqueIdentifier>{6e88049a-8eed-4d19-92fc-04fc35a55fec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Animation">
+      <UniqueIdentifier>{78bdded7-d358-442c-9c78-a3a9184d3428}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Physics">
+      <UniqueIdentifier>{f6f8f0bd-1745-4b7e-9eb4-b1b4ba0492f8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="Game\TestScene.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Graphics\MeshRenderer.cpp">
+      <Filter>Core\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Object\Camera.cpp">
+      <Filter>Core\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Graphics\Renderer.cpp">
+      <Filter>Core\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Graphics\Shader\Shader.cpp">
+      <Filter>Core\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Graphics\Texture.cpp">
+      <Filter>Core\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Object\GameObject.cpp">
+      <Filter>Core\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Object\Transform.cpp">
+      <Filter>Core\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\System\Input.cpp">
+      <Filter>Core\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\System\Logger.cpp">
+      <Filter>Core\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Scene\Scene.cpp">
+      <Filter>Core\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Scene\SceneManager.cpp">
+      <Filter>Core\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\System\Time.cpp">
+      <Filter>Core\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Audio\Audio.cpp">
+      <Filter>Core\Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Audio\AudioComponent.cpp">
+      <Filter>Core\Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Graphics\Model.cpp">
+      <Filter>Core\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Graphics\ModelRenderer.cpp">
+      <Filter>Core\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Animation\Animator.cpp">
+      <Filter>Core\Animation</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Animation\AnimationClip.cpp">
+      <Filter>Core\Animation</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Animation\Skeleton.cpp">
+      <Filter>Core\Animation</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Physics\Collider.cpp">
+      <Filter>Core\Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Physics\Collision.cpp">
+      <Filter>Core\Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="Game\Field.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Game\GameScene.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Game\Player.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Game\Puck.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Graphics\SkinnedMeshRenderer.cpp">
+      <Filter>Core\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Graphics\SkinnedModel.cpp">
+      <Filter>Core\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Graphics\Shader\SkinnedShader.cpp">
+      <Filter>Core\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Graphics\Sprite.cpp">
+      <Filter>Core\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Graphics\SpriteRenderer.cpp">
+      <Filter>Core\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Graphics\Shader\ToonShader.cpp">
+      <Filter>Core\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Graphics\Particle\ParticleSystem.cpp" />
+    <ClCompile Include="Core\Graphics\Particle\ParticleRenderer.cpp" />
+    <ClCompile Include="Core\Graphics\Particle\ParticleShader.cpp" />
+    <ClCompile Include="Core\Graphics\Particle\ParticleEmitter.cpp" />
+    <ClCompile Include="Core\Graphics\Particle\LightningTrail.cpp" />
+    <ClCompile Include="Core\Graphics\Particle\LightningShader.cpp" />
+    <ClCompile Include="Game\Goal.cpp" />
+    <ClCompile Include="Game\ScoreManager.cpp" />
+    <ClCompile Include="Core\Graphics\Particle\ConfettiEmitter.cpp" />
+    <ClCompile Include="Core\Graphics\Particle\ConfettiShader.cpp" />
+    <ClCompile Include="Core\Graphics\UI\NumberRenderer.cpp" />
+    <ClCompile Include="Game\ScoreUI.cpp" />
+    <ClCompile Include="Core\Graphics\Shader\RimLightSkinnedShader.cpp" />
+    <ClCompile Include="Core\Graphics\ShadowMap.cpp" />
+    <ClCompile Include="Core\Graphics\Shader\ShadowMapShader.cpp" />
+    <ClCompile Include="Core\Graphics\Shader\FieldShadowShader.cpp" />
+    <ClCompile Include="Game\CountDownUI.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Game\TestScene.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Graphics\MeshRenderer.h">
+      <Filter>Core\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Graphics\Renderer.h">
+      <Filter>Core\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Graphics\Shader\Shader.h">
+      <Filter>Core\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Graphics\Texture.h">
+      <Filter>Core\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Math\Quaternion.h">
+      <Filter>Core\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Math\Vector3.h">
+      <Filter>Core\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Object\Camera.h">
+      <Filter>Core\Object</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Object\Component.h">
+      <Filter>Core\Object</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Object\GameObject.h">
+      <Filter>Core\Object</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Object\Transform.h">
+      <Filter>Core\Object</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\System\Input.h">
+      <Filter>Core\System</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\System\Logger.h">
+      <Filter>Core\System</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\System\main.h">
+      <Filter>Core\System</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Scene\Scene.h">
+      <Filter>Core\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Scene\SceneManager.h">
+      <Filter>Core\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\System\Time.h">
+      <Filter>Core\System</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Audio\AudioComponent.h">
+      <Filter>Core\Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Audio\Audio.h">
+      <Filter>Core\Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Graphics\Model.h">
+      <Filter>Core\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Graphics\ModelRenderer.h">
+      <Filter>Core\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Animation\AnimationClip.h">
+      <Filter>Core\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Animation\Animator.h">
+      <Filter>Core\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Animation\Bone.h">
+      <Filter>Core\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Animation\Skeleton.h">
+      <Filter>Core\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Physics\Collider.h">
+      <Filter>Core\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Physics\Collision.h">
+      <Filter>Core\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="Game\Field.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Game\GameScene.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Game\Player.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Game\Puck.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Graphics\SkinnedMeshRenderer.h">
+      <Filter>Core\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Graphics\SkinnedModel.h">
+      <Filter>Core\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Graphics\Shader\SkinnedShader.h">
+      <Filter>Core\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Graphics\Sprite.h">
+      <Filter>Core\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Graphics\SpriteRenderer.h">
+      <Filter>Core\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Graphics\Shader\ToonShader.h">
+      <Filter>Core\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Graphics\Shader\IShader.h" />
+    <ClInclude Include="Core\Graphics\Particle\ParticleSystem.h" />
+    <ClInclude Include="Core\Graphics\Particle\ParticleRenderer.h" />
+    <ClInclude Include="Core\Graphics\Particle\ParticleShader.h" />
+    <ClInclude Include="Core\Graphics\Particle\ParticleEmitter.h" />
+    <ClInclude Include="Core\Graphics\Particle\LightningTrail.h" />
+    <ClInclude Include="Core\Graphics\Particle\LightningShader.h" />
+    <ClInclude Include="Game\Goal.h" />
+    <ClInclude Include="Game\ScoreManager.h" />
+    <ClInclude Include="Core\Graphics\Particle\ConfettiEmitter.h" />
+    <ClInclude Include="Core\Graphics\Particle\ConfettiShader.h" />
+    <ClInclude Include="Core\Graphics\UI\NumberRenderer.h" />
+    <ClInclude Include="Game\ScoreUI.h" />
+    <ClInclude Include="Core\Graphics\Shader\RimLightSkinnedShader.h" />
+    <ClInclude Include="Core\Graphics\ShadowMap.h" />
+    <ClInclude Include="Core\Graphics\Shader\ShadowMapShader.h" />
+    <ClInclude Include="Core\Graphics\Shader\FieldShadowShader.h" />
+    <ClInclude Include="Game\GameState.h" />
+    <ClInclude Include="Game\CountDownUI.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Shader\PixelShader.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="Shader\VertexShader.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="Shader\OutlinePixelShader.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="Shader\OutlineVertexShader.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="Shader\SkinnedVertexShader.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="Shader\SpritePixelShader.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="Shader\SpriteVertexShader.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="Shader\ToonPixelShader.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="Shader\ToonSkinnedOutlineVertexShader.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="Shader\ToonSkinnedVertexShader.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="Shader\ParticleVertexShader.hlsl" />
+    <FxCompile Include="Shader\ParticlePixelShader.hlsl" />
+    <FxCompile Include="Shader\LightningVertexShader.hlsl" />
+    <FxCompile Include="Shader\LightningPixelShader.hlsl" />
+    <FxCompile Include="Shader\ConfettiVertexShader.hlsl" />
+    <FxCompile Include="Shader\ConfettiPixelShader.hlsl" />
+    <FxCompile Include="Shader\RimLightPixelShader.hlsl" />
+    <FxCompile Include="Shader\RimLightSkinnedVertexShader.hlsl" />
+    <FxCompile Include="Shader\ShadowMapVertexShader.hlsl" />
+    <FxCompile Include="Shader\ShaderMapPixelShader.hlsl" />
+    <FxCompile Include="Shader\FieldVertexShader.hlsl" />
+    <FxCompile Include="Shader\ShadowReceiverPixelShader.hlsl" />
+  </ItemGroup>
+</Project>
