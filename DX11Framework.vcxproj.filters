@@ -326,5 +326,7 @@
     <FxCompile Include="Shader\ShaderMapPixelShader.hlsl" />
     <FxCompile Include="Shader\FieldVertexShader.hlsl" />
     <FxCompile Include="Shader\ShadowReceiverPixelShader.hlsl" />
+    <FxCompile Include="Shader\PostEdgeVertexShader.hlsl" />
+    <FxCompile Include="Shader\PostEdgePixelShader.hlsl" />
   </ItemGroup>
 </Project>
