@@ -1,5 +1,5 @@
 ﻿#include "ResultScene.h"
-#include "ScoreManager.h"
+#include "Game/System/ScoreManager.h"
 #include "Core/System/Input.h"
 #include "Core/Scene/SceneManager.h"
 #include "Core/Graphics/UI/TextRenderer.h"

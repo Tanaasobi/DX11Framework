@@ -3,9 +3,9 @@
 //==============================================================================
 
 #include "CpuAI.h"
-#include "Player.h"
-#include "Puck.h"
-#include "Field.h"
+#include "Game/Objects/Player.h"
+#include "Game/Objects/Puck.h"
+#include "Game/Objects/Field.h"
 #include "Core/Physics/Collider.h"
 #include "Core/System/Logger.h"
 #include "Core/Scene/SceneManager.h"

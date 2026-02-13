@@ -3,7 +3,7 @@
 //==============================================================================
 
 #include "ScoreUI.h"
-#include "ScoreManager.h"
+#include "Game/System/ScoreManager.h"
 #include "Core/Graphics/Renderer.h"
 #include "Core/Graphics/UI/TextRenderer.h"
 #include <string>

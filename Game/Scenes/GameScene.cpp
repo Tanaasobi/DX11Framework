@@ -3,14 +3,14 @@
 //==============================================================================
 
 #include "GameScene.h"
-#include "Player.h"
-#include "CpuAI.h" // AIコンポーネントを追加
-#include "Puck.h"
-#include "Field.h"
-#include "Goal.h"
-#include "ScoreManager.h"
-#include "ScoreUI.h"
-#include "CountdownUI.h"
+#include "Game/Objects/Player.h"
+#include "Game/Components/CpuAI.h" // AIコンポーネントを追加
+#include "Game/Objects/Puck.h"
+#include "Game/Objects/Field.h"
+#include "Game/Objects/Goal.h"
+#include "Game/System/ScoreManager.h"
+#include "Game/UI/ScoreUI.h"
+#include "Game/UI/CountdownUI.h"
 #include "Core/Graphics/Renderer.h"
 #include "Core/Graphics/Shader/Shader.h"
 #include "Core/Graphics/Shader/SkinnedShader.h"

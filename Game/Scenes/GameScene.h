@@ -6,8 +6,8 @@
 
 #include "Core/Scene/Scene.h"
 #include "Core/Graphics/Shader/IShader.h"
-#include "Goal.h"
-#include "GameState.h"
+#include "Game/Objects/Goal.h"
+#include "Game/System/GameState.h"
 
 class Player;
 class CpuAI;
