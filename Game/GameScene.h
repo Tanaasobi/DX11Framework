@@ -8,9 +8,9 @@
 #include "Core/Graphics/Shader/IShader.h"
 #include "Goal.h"
 #include "GameState.h"
-#include <random>
 
 class Player;
+class CpuAI;
 class Puck;
 class Goal;
 class ScoreUI;
@@ -36,42 +36,37 @@ public:
 
 private:
 	// シェーダー類
-	IShader* m_Shader = nullptr;
-	IShader* m_SkinnedShader = nullptr;
-	RimLightSkinnedShader* m_RimLightShader = nullptr;
-	RimLightSkinnedShader* m_RimLightShaderCpu = nullptr;
-	ParticleShader* m_ParticleShader = nullptr;
-	ConfettiShader* m_ConfettiShader = nullptr;
-	ConfettiEmitter* m_ConfettiEmitter = nullptr;
+	IShader* m_Shader = nullptr;                          // 通常シェーダー
+	IShader* m_SkinnedShader = nullptr;                   // スキンメッシュ用シェーダー
+	RimLightSkinnedShader* m_RimLightShader = nullptr;    // 人間プレイヤー用リムライトシェーダー
+	RimLightSkinnedShader* m_RimLightShaderCpu = nullptr; // CPUプレイヤー用リムライトシェーダー
+	ParticleShader* m_ParticleShader = nullptr; 		  // パーティクルシェーダー
+	ConfettiShader* m_ConfettiShader = nullptr; 	  	  // 紙吹雪シェーダー
+	ConfettiEmitter* m_ConfettiEmitter = nullptr;         // 紙吹雪エミッター
 
 	// シャドウマップ関連
-	ShadowMap* m_ShadowMap = nullptr;
-	ShadowMapShader* m_ShadowMapShader = nullptr;
-	FieldShadowShader* m_FieldShadowShader = nullptr;
-	ID3D11Buffer* m_ShadowBuffer = nullptr;
+	ShadowMap* m_ShadowMap = nullptr;                 // シャドウマップ
+	ShadowMapShader* m_ShadowMapShader = nullptr;     // シャドウマップ生成用シェーダー
+	FieldShadowShader* m_FieldShadowShader = nullptr; // フィールド影受け用シェーダー
+	ID3D11Buffer* m_ShadowBuffer = nullptr;           // シャドウマップ用定数バッファ
 
 	// ゲームオブジェクト
-	Player* m_CachedPlayer = nullptr;
-	Player* m_CachedCpu = nullptr;
-	Puck* m_CachedPuck = nullptr;
-	Goal* m_GoalLeft = nullptr;
-	Goal* m_GoalRight = nullptr;
+	Player* m_CachedPlayer = nullptr; // 人間プレイヤー
+	Player* m_CachedCpu = nullptr;    // Cpuプレイヤー
+	CpuAI* m_CachedCpuAI = nullptr;   // CpuAIコンポーネント
+	Puck* m_CachedPuck = nullptr;     // パック
+	Goal* m_GoalLeft = nullptr;       // 左ゴール
+	Goal* m_GoalRight = nullptr;      // 右ゴール
 
 	// UI
-	ScoreUI* m_ScoreUI = nullptr;
-	CountdownUI* m_CountdownUI = nullptr;
+	ScoreUI* m_ScoreUI = nullptr;         // スコアUI
+	CountdownUI* m_CountdownUI = nullptr; // カウントダウンUI
 
 	// ゲーム状態
 	GameState m_GameState = GameState::Ready;
 	float m_StateTimer = 0.0f;
 	int m_CountdownValue = 3;
 	Team m_LastScoredTeam = Team::Left;  // 最後に得点したチーム
-
-	// CPU関連
-	std::mt19937 m_Rng{ std::random_device{}() };
-	std::uniform_real_distribution<float> m_CpuKickIntervalRand{ 0.7f, 1.3f };
-	float m_CpuKickInterval = 0.7f;
-	float m_CpuKickTimer = 0.0f;
 
 	// 内部関数
 	void CacheGameObjects();
@@ -80,10 +75,6 @@ private:
 	void SpawnGoalConfetti(Team scoringTeam);
 	void ResetRound(Team scoredAgainstTeam);
 	void ResetPositions();
-
-	void UpdateCpuAI(float deltaTime);
-	void GetCpuShootDirection(float& outDirX, float& outDirZ);
-	bool TryKickPuck(Player* kicker, float dirX, float dirZ);
 
 	// 状態更新
 	void UpdateReady(float deltaTime);

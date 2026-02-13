@@ -238,6 +238,7 @@ TextCacheEntry Font::RenderTextToTexture(const std::wstring& text)
 	// 5. テキスト描画（白色で描画、色はSpriteシェーダーで付ける）
 	ID2D1SolidColorBrush* brush = nullptr;
 	rt->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), &brush);
+	assert(SUCCEEDED(hr) && brush);
 
 	rt->BeginDraw();
 	rt->Clear(D2D1::ColorF(0.0f, 0.0f, 0.0f, 0.0f));  // 透明クリア
