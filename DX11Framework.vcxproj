@@ -117,7 +117,9 @@ xcopy /Y /E /I "$(ProjectDir)Asset" "$(OutDir)Asset"</Command>
     <ClCompile Include="Core\Graphics\Sprite.cpp" />
     <ClCompile Include="Core\Graphics\SpriteRenderer.cpp" />
     <ClCompile Include="Core\Graphics\Shader\ToonShader.cpp" />
+    <ClCompile Include="Core\Graphics\UI\Font.cpp" />
     <ClCompile Include="Core\Graphics\UI\NumberRenderer.cpp" />
+    <ClCompile Include="Core\Graphics\UI\TextRenderer.cpp" />
     <ClCompile Include="Core\Object\Camera.cpp" />
     <ClCompile Include="Core\Object\GameObject.cpp" />
     <ClCompile Include="Core\Physics\Collider.cpp" />
@@ -171,7 +173,9 @@ xcopy /Y /E /I "$(ProjectDir)Asset" "$(OutDir)Asset"</Command>
     <ClInclude Include="Core\Graphics\Sprite.h" />
     <ClInclude Include="Core\Graphics\SpriteRenderer.h" />
     <ClInclude Include="Core\Graphics\Shader\ToonShader.h" />
+    <ClInclude Include="Core\Graphics\UI\Font.h" />
     <ClInclude Include="Core\Graphics\UI\NumberRenderer.h" />
+    <ClInclude Include="Core\Graphics\UI\TextRenderer.h" />
     <ClInclude Include="Core\Object\Camera.h" />
     <ClInclude Include="Core\Object\Component.h" />
     <ClInclude Include="Core\Object\GameObject.h" />

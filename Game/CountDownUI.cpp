@@ -4,9 +4,9 @@
 
 #include "CountdownUI.h"
 #include "Core/Graphics/Renderer.h"
-#include "Core/Graphics/Sprite.h"
-#include "Core/Graphics/Texture.h"
+#include "Core/Graphics/UI/TextRenderer.h"
 #include "Core/System/main.h"
+#include <string>
 
 //==============================================================================
 // コンストラクタ
@@ -20,7 +20,12 @@ CountdownUI::CountdownUI()
 //==============================================================================
 CountdownUI::~CountdownUI()
 {
-	m_NumberRenderer.Uninit();
+	if (m_Font)
+	{
+		m_Font->Uninit();
+		delete m_Font;
+		m_Font = nullptr;
+	}
 }
 
 //==============================================================================
@@ -28,7 +33,8 @@ CountdownUI::~CountdownUI()
 //==============================================================================
 bool CountdownUI::Init()
 {
-	return m_NumberRenderer.Init("Asset/Texture/number.png");
+	m_Font = new Font();
+	return m_Font->Init(L"Yu Gothic", 128.0f);
 }
 
 //==============================================================================
@@ -37,28 +43,24 @@ bool CountdownUI::Init()
 void CountdownUI::Render()
 {
 	if (m_Count < 0 && !m_ShowGo) return;
-
-	Renderer::SetDepthEnable(false);
+	if (!m_Font) return;
 
 	float centerX = SCREEN_WIDTH * 0.5f;
 	float centerY = SCREEN_HEIGHT * 0.5f;
-	float digitWidth = 120.0f;
-	float digitHeight = 160.0f;
 
 	if (m_ShowGo)
 	{
-		// "GO!" は数字の0を大きく表示（本来はテクスチャで"GO!"を用意）
-		// ここでは簡易的に何も表示しないか、別のテクスチャを使う
-		// 数字テクスチャを流用して0を表示
-		m_NumberRenderer.DrawNumberCenter(0, centerX, centerY - digitHeight * 0.5f, digitWidth, digitHeight);
+		// "GO!" を表示
+		TextRenderer::Draw(m_Font, L"GO!", centerX, centerY - m_Font->GetLineHeight() * 0.5f,
+			1.0f, 1.0f, 0.0f, 1.0f, TextAlign::Center);
 	}
 	else if (m_Count > 0)
 	{
 		// カウントダウン数字
-		m_NumberRenderer.DrawNumberCenter(m_Count, centerX, centerY - digitHeight * 0.5f, digitWidth, digitHeight);
+		std::wstring countText = std::to_wstring(m_Count);
+		TextRenderer::Draw(m_Font, countText, centerX, centerY - m_Font->GetLineHeight() * 0.5f,
+			1.0f, 1.0f, 1.0f, 1.0f, TextAlign::Center);
 	}
-
-	Renderer::SetDepthEnable(true);
 }
 
 //==============================================================================

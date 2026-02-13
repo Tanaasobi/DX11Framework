@@ -5,7 +5,7 @@
 //==============================================================================
 
 #include "Core/Object/Component.h"
-#include "Core/Graphics/UI/NumberRenderer.h"
+#include "Core/Graphics/UI/Font.h"
 
 class CountdownUI : public Component
 {
@@ -21,7 +21,7 @@ public:
 	void Hide();
 
 private:
-	NumberRenderer m_NumberRenderer;
+	Font* m_Font = nullptr;
 	int m_Count = -1;
 	bool m_ShowGo = false;
 };

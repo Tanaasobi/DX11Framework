@@ -9,6 +9,7 @@
 #include "Core/Graphics/Renderer.h"
 #include "Core/Graphics/Texture.h"
 #include "Core/Graphics/Sprite.h"
+#include "Core/Graphics/UI/TextRenderer.h"
 #include "Core/Scene/SceneManager.h"
 #include "Core/Audio/Audio.h"
 #include "Game/GameScene.h"
@@ -171,6 +172,14 @@ int WINAPI WinMain(
 	Sprite::Init();
 	Logger::Info("Sprite system initialized");
 
+	// テキストレンダラー初期化
+	if (!TextRenderer::Init())
+	{
+		Logger::Error("TextRenderer initialization failed");
+		return -1;
+	}
+	Logger::Info("TextRenderer initialized");
+
 	// Audio初期化
 	Audio::InitMaster();
 	Logger::Info("Audio initialized");
@@ -229,8 +238,9 @@ int WINAPI WinMain(
 	//--------------------------------------------------------------------------
 	Logger::Info("Game shutting down...");
 
-	SceneManager::Uninit();	
+	SceneManager::Uninit();
 	Audio::UninitMaster();
+	TextRenderer::Uninit();
 	Sprite::Uninit();
 	Texture::Uninit();
 	Input::Uninit();
