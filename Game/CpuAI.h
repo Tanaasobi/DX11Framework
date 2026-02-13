@@ -6,6 +6,8 @@
 
 #include "Core/Object/Component.h"
 #include "Core/Math/Vector3.h"
+#include "Core/Graphics/UI/Font.h"
+#include <string>
 #include <random>
 
 class Player;
@@ -33,6 +35,9 @@ public:
 	// パラメータ設定（調整用）
 	void SetActive(bool active) { m_IsActive = active; }
 
+	// デバッグ描画メソッド
+	void DrawDebugGUI();
+
 private:
 	// 参照
 	Player* m_Owner = nullptr;
@@ -59,6 +64,17 @@ private:
 	// 確率パラメータ (%)
 	const int PROB_WALL_SHOT = 40;        // 壁打ちシュートの確率
 	const int PROB_CLEAR_SAFE = 70;       // 安全な方向へクリアする確率
+
+	// フィールド定数（シミュレーション用）
+	const float SIM_FIELD_TOP = -8.0f;
+	const float SIM_FIELD_BOTTOM = 8.0f;
+	const float SIM_FIELD_RIGHT = 11.0f; // 右ゴールライン（自陣）
+	const float SIM_GOAL_HALF_WIDTH = 4.0f; // ゴールのZ幅の半分
+
+	// デバッグ用
+	Font* m_DebugFont = nullptr;
+	std::string m_DebugStateStr; // 状態名文字列
+	std::string m_DebugInfoStr;  // 数値情報文字列
 
 	//--------------------------------------------------------------------------
 	// 内部ロジック
@@ -88,4 +104,7 @@ private:
 	Vector3 GetDirectShotDir();                  // ゴールへの直接シュート方向
 	Vector3 GetBounceShotDir();                  // 壁反射シュート方向
 	Vector3 GetSafeClearDir();                   // 敵がいない方向へのクリア方向
+
+	// 最短迎撃ポイントの計算（ステップシミュレーション）
+	Vector3 CalculateInterceptionPos();
 };

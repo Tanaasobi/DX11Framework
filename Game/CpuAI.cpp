@@ -9,29 +9,50 @@
 #include "Core/Physics/Collider.h"
 #include "Core/System/Logger.h"
 #include "Core/Scene/SceneManager.h"
-#include "Core/Scene/Scene.h" // Sceneクラスの定義が必要
+#include "Core/Scene/Scene.h"
+#include "Core/Graphics/UI/TextRenderer.h"
+#include "Core/System/main.h"
 #include <cmath>
 #include <algorithm>
+#include <iomanip>
+#include <sstream>
 
 using namespace DirectX;
 
+//==============================================================================
+// コンストラクタ
+//==============================================================================
 CpuAI::CpuAI()
 	: m_Rng(std::random_device{}())
 {
 }
 
+//==============================================================================
+// デストラクタ
+//==============================================================================
 CpuAI::~CpuAI()
 {
+	if (m_DebugFont)
+	{
+		m_DebugFont->Uninit();
+		delete m_DebugFont;
+		m_DebugFont = nullptr;
+	}
 }
 
+//==============================================================================
+// 初期化
+//==============================================================================
 void CpuAI::Init(Player* ownerPlayer, Puck* targetPuck)
 {
 	m_Owner = ownerPlayer;
 	m_TargetPuck = targetPuck;
 
+	// デバッグ用フォント初期化
+	m_DebugFont = new Font();
+	m_DebugFont->Init(L"Yu Gothic", 24.0f);
+
 	// 相手プレイヤーを探す
-	// FindGameObjectOfTypeは最初に見つかった1つを返す仕様と想定（通常は生成順）
-	// Player(人間)はCPUより先に生成されているため、これで取得できるはず
 	Scene* activeScene = SceneManager::GetActiveScene();
 	if (activeScene)
 	{
@@ -44,8 +65,6 @@ void CpuAI::Init(Player* ownerPlayer, Puck* targetPuck)
 		}
 		else
 		{
-			// もし自分が見つかってしまった場合、リスト等から検索が必要だが
-			// 現状の実装順（Player -> Puck -> CPU）なら問題ないはず
 			Logger::Warning("CpuAI: Enemy player not found (found self).");
 		}
 	}
@@ -56,6 +75,9 @@ void CpuAI::Init(Player* ownerPlayer, Puck* targetPuck)
 	}
 }
 
+//==============================================================================
+// 更新
+//==============================================================================
 void CpuAI::Update(float deltaTime)
 {
 	if (!m_IsActive || !m_Owner || !m_TargetPuck) return;
@@ -92,8 +114,7 @@ void CpuAI::DecideState()
 	float puckVelZ = 0.0f;
 	m_TargetPuck->GetVelocity(puckVelX, puckVelZ);
 
-	// 1. キック範囲内なら即座にアクション決定
-	// Vector3::DistanceSquaredがないため手動計算
+	// --- 1. キック範囲内判定 ---
 	Vector3 diff = myPos - puckPos;
 	float distSq = diff.LengthSquared();
 
@@ -102,17 +123,19 @@ void CpuAI::DecideState()
 		// 自陣深くならクリア、敵陣寄りならシュート
 		if (puckPos.x > 0.0f)
 		{
-			m_State = CpuState::Clear; // 自陣（右側）なのでクリア
+			m_State = CpuState::Clear;
+			m_DebugStateStr = "Action: CLEAR";
 		}
 		else
 		{
-			m_State = CpuState::Shoot; // 敵陣なのでシュート
+			m_State = CpuState::Shoot;
+			m_DebugStateStr = "Action: SHOOT";
 		}
 		m_ActionTimer = 0.2f; // アクション予備動作時間
 		return;
 	}
 
-	// 2. パックへの到達予測時間を比較
+	// --- 2. 到達時間計算 ---
 	float myReachTime = CalculateReachTime(myPos, m_Owner->moveSpeed, puckPos);
 	float enemyReachTime = 100.0f;
 
@@ -122,40 +145,59 @@ void CpuAI::DecideState()
 			m_EnemyPlayer->moveSpeed, puckPos);
 	}
 
-	// 3. 状況別ステート遷移
+	// --- 3. ステート決定ロジック ---
 	bool isPuckComing = (puckVelX > 0.5f); // パックが自陣（右）に向かっている
 	bool isPuckInMySide = (puckPos.x > 0.0f); // パックが自陣にある
+
+	// デバッグ情報の更新
+	std::ostringstream ss;
+	ss << "MyReach: " << std::fixed << std::setprecision(2) << myReachTime
+		<< " / EnemyReach: " << enemyReachTime;
+	m_DebugInfoStr = ss.str();
 
 	if (isPuckInMySide)
 	{
 		// 自陣にある場合
-		if (myReachTime < enemyReachTime * 0.8f) // 明らかに自分が近い
+		// 多少遅くても、自陣なら無理して取りに行く
+		if (myReachTime < enemyReachTime * 1.2f)
 		{
 			m_State = CpuState::Attack;
+			m_DebugStateStr = "State: ATTACK (My Side)";
 		}
 		else
 		{
-			// 相手の方が近い、または微妙な距離 -> ゴールを守る
 			m_State = CpuState::Defend;
+			m_DebugStateStr = "State: DEFEND (Too far)";
 		}
 	}
 	else
 	{
 		// 敵陣にある場合
-		if (myReachTime < enemyReachTime && !isPuckComing)
+		// 対等なら攻める
+		if (myReachTime < enemyReachTime * 1.0f)
 		{
-			// 自分が近く、かつパックが向かってきていない（止まっている等）なら攻める
 			m_State = CpuState::Attack;
+			m_DebugStateStr = "State: ATTACK (Enemy Side)";
 		}
 		else if (isPuckComing)
 		{
-			// 敵陣にあるが、こっちに向かってきている -> カウンターに備えて下がる
 			m_State = CpuState::Defend;
+			m_DebugStateStr = "State: DEFEND (Counter)";
 		}
 		else
 		{
-			// 敵がボールを持っていて、まだ攻めてきていない -> 待機
-			m_State = CpuState::Wait;
+			// 敵陣で止まっている、または敵がキープしている
+			// 距離が近ければプレッシャーをかける
+			if (myReachTime < 3.0f)
+			{
+				m_State = CpuState::Attack;
+				m_DebugStateStr = "State: ATTACK (Pressure)";
+			}
+			else
+			{
+				m_State = CpuState::Wait;
+				m_DebugStateStr = "State: WAIT";
+			}
 		}
 	}
 }
@@ -189,8 +231,19 @@ void CpuAI::ExecuteAction(float deltaTime)
 void CpuAI::UpdateAttack()
 {
 	Vector3 puckPos = m_TargetPuck->GetTransform()->position;
+	Vector3 myPos = m_Owner->GetTransform()->position;
 
-	// 少しだけ未来位置を追うとスムーズ
+	// パックが自分より右（自陣ゴール寄り）にある場合
+	if (puckPos.x > myPos.x)
+	{
+		// ステップシミュレーションを使って「最短で触れる場所」へ移動
+		// バウンド前も考慮される
+		Vector3 target = CalculateInterceptionPos();
+		MoveTo(target);
+		return;
+	}
+
+	// 通常（前方にある場合）は直近の未来位置を追う
 	float vx, vz;
 	m_TargetPuck->GetVelocity(vx, vz);
 	Vector3 target = puckPos + Vector3(vx, 0, vz) * 0.2f;
@@ -199,34 +252,57 @@ void CpuAI::UpdateAttack()
 }
 
 //------------------------------------------------------------------------------
-// 守り: 先読みして守備位置へ
+// 守り: ゴールとパックを結ぶ直線を塞ぐ
 //------------------------------------------------------------------------------
 void CpuAI::UpdateDefend()
 {
 	Vector3 puckPos = m_TargetPuck->GetTransform()->position;
-	float vx, vz;
-	m_TargetPuck->GetVelocity(vx, vz);
 
-	Vector3 targetPos;
-	targetPos.x = DEFEND_LINE_X; // 基本守備ライン
+	// 自陣ゴールの位置（FieldBounds::RIGHT の中心）
+	// ゴールラインより少し手前を守備ラインとする
+	const float GOAL_X = FieldBounds::RIGHT;
 
-	// パックが向かってきている(Vx > 0)なら、到達地点を予測
-	if (vx > 0.1f)
+	// 守備ラインのX座標（ゴールの少し前で待つ）
+	// あまりゴールに張り付くと横を抜かれるので、適度な距離(DEFEND_LINE_X)を保つ
+	// ただし、パックが守備ラインより後ろに来た場合は、パックとゴールの間に潜り込む
+	float targetX = DEFEND_LINE_X;
+
+	// パックが守備ラインを超えて自陣ゴール側に来ている場合
+	if (puckPos.x > DEFEND_LINE_X)
 	{
-		targetPos = PredictPuckPosOnLine(DEFEND_LINE_X);
+		// パックとゴールの間（パックの少し後ろ）に入る
+		targetX = puckPos.x + 2.0f;
+		// ゴールより後ろには行かない
+		targetX = std::min(targetX, GOAL_X - 1.0f);
+	}
+
+	// --- シュートコースの遮断計算 ---
+	// 直線方程式: ゴール(G)とパック(P)を結ぶ線分上で、X座標が targetX となる点の Z を求める
+	// 比率 t = (TargetX - G.x) / (P.x - G.x)
+	// TargetZ = G.z + (P.z - G.z) * t
+
+	// ゴールのZは0なので、式はシンプルになる: TargetZ = P.z * t
+
+	float denominator = puckPos.x - GOAL_X;
+	float targetZ = 0.0f;
+
+	// ゼロ除算防止（パックがゴールラインと重なることはほぼないが念のため）
+	if (std::abs(denominator) > 0.001f)
+	{
+		float t = (targetX - GOAL_X) / denominator;
+		targetZ = puckPos.z * t;
 	}
 	else
 	{
-		// 向かってきていないなら、パックのZ座標に合わせてスライド
-		targetPos.z = puckPos.z;
+		targetZ = puckPos.z;
 	}
 
-	// 守備位置に向かうが、X方向はあまり前に出過ぎないようにClamp
-	targetPos.x = std::max(targetPos.x, DEFEND_LINE_X);
+	// 目標地点
+	Vector3 targetPos(targetX, 0.0f, targetZ);
 
+	// 移動
 	MoveTo(targetPos);
 }
-
 //------------------------------------------------------------------------------
 // 待機: センターライン手前で様子見
 //------------------------------------------------------------------------------
@@ -261,12 +337,12 @@ void CpuAI::UpdateShoot(float deltaTime)
 		if (dist(m_Rng) < PROB_WALL_SHOT)
 		{
 			shootDir = GetBounceShotDir();
-			Logger::Info("CpuAI: Bounce Shot!");
+			m_DebugInfoStr = "Shot: BOUNCE";
 		}
 		else
 		{
 			shootDir = GetDirectShotDir();
-			Logger::Info("CpuAI: Direct Shot!");
+			m_DebugInfoStr = "Shot: DIRECT";
 		}
 
 		if (TryKick(shootDir))
@@ -297,13 +373,14 @@ void CpuAI::UpdateClear(float deltaTime)
 		if (dist(m_Rng) < PROB_CLEAR_SAFE && m_EnemyPlayer)
 		{
 			clearDir = GetSafeClearDir();
-			Logger::Info("CpuAI: Safe Clear!");
+			m_DebugInfoStr = "Clear: SAFE";
 		}
 		else
 		{
 			// とりあえず前（敵ゴール方向）へ強く蹴る
 			clearDir = Vector3(-1.0f, 0.0f, (dist(m_Rng) % 2 == 0) ? 0.5f : -0.5f);
 			clearDir.Normalize();
+			m_DebugInfoStr = "Clear: RAND";
 		}
 
 		if (TryKick(clearDir))
@@ -322,13 +399,26 @@ void CpuAI::MoveTo(const Vector3& targetPos)
 {
 	Vector3 myPos = m_Owner->GetTransform()->position;
 
-	// Vector3::Distanceがないため手動計算
 	Vector3 diff = targetPos - myPos;
 	float dist = diff.Length();
 
-	if (dist > 0.1f)
+	// 停止閾値（ジッタリング対策）
+	const float STOP_THRESHOLD = 0.2f;
+
+	if (dist > STOP_THRESHOLD)
 	{
-		m_Owner->SetMoveInput(diff.x / dist, diff.z / dist);
+		// 目的地に近づいたら減速する処理 (Arrive挙動)
+		const float SLOW_DOWN_DIST = 1.5f; // 減速を開始する距離
+		float magnitude = 1.0f;
+
+		if (dist < SLOW_DOWN_DIST)
+		{
+			// 距離に応じて入力を弱める
+			magnitude = dist / SLOW_DOWN_DIST;
+			magnitude = std::max(magnitude, 0.2f);
+		}
+
+		m_Owner->SetMoveInput((diff.x / dist) * magnitude, (diff.z / dist) * magnitude);
 	}
 	else
 	{
@@ -343,8 +433,7 @@ bool CpuAI::TryKick(const Vector3& dir)
 	// キック実行（Playerクラスの機能を利用）
 	if (m_Owner->TryKick())
 	{
-		// 本来はPlayerが蹴った方向に飛ぶが、AIの補正として
-		// パックの速度を直接上書きして「狙った方向に蹴れた」ことにする
+		// AIの補正としてパックの速度を直接上書きして「狙った方向に蹴れた」ことにする
 		float kickPower = 25.0f;
 		m_TargetPuck->SetVelocity(dir.x * kickPower, dir.z * kickPower);
 		return true;
@@ -359,35 +448,22 @@ Vector3 CpuAI::PredictPuckPosOnLine(float targetX)
 	float vx, vz;
 	m_TargetPuck->GetVelocity(vx, vz);
 
-	// 速度がほぼ0、またはターゲットと逆向きなら現在位置を返す
 	if (std::abs(vx) < 0.01f) return p;
 	if ((targetX - p.x) * vx < 0) return p;
 
-	// 到達までの時間
 	float t = (targetX - p.x) / vx;
-
-	// 到達時のZ座標（反射なし）
 	float predictedZ = p.z + vz * t;
 
-	// フィールドの上下範囲（FieldBounds::TOP/BOTTOM が使えない場合は定数で代用）
-	// ここでは Field.h の定義値を想定: Top=-8.5, Bottom=8.5 とする
-	// 必要に応じて Field.h をインクルードして FieldBounds::TOP などを使用してください
-	const float FIELD_TOP = -8.0f;
-	const float FIELD_BOTTOM = 8.0f;
-
-	// 反射計算（簡易版）
-	// 範囲を超えている間、折り返す
-	while (predictedZ < FIELD_TOP || predictedZ > FIELD_BOTTOM)
+	// FieldBoundsを使用
+	while (predictedZ < FieldBounds::TOP || predictedZ > FieldBounds::BOTTOM)
 	{
-		if (predictedZ < FIELD_TOP)
+		if (predictedZ < FieldBounds::TOP)
 		{
-			float over = FIELD_TOP - predictedZ;
-			predictedZ = FIELD_TOP + over;
+			predictedZ = FieldBounds::TOP + (FieldBounds::TOP - predictedZ);
 		}
-		else if (predictedZ > FIELD_BOTTOM)
+		else if (predictedZ > FieldBounds::BOTTOM)
 		{
-			float over = predictedZ - FIELD_BOTTOM;
-			predictedZ = FIELD_BOTTOM - over;
+			predictedZ = FieldBounds::BOTTOM - (predictedZ - FieldBounds::BOTTOM);
 		}
 	}
 
@@ -398,8 +474,9 @@ Vector3 CpuAI::PredictPuckPosOnLine(float targetX)
 Vector3 CpuAI::GetDirectShotDir()
 {
 	Vector3 p = m_TargetPuck->GetTransform()->position;
-	// 相手ゴール（左）の中心 (-10, 0, 0) 付近
-	Vector3 target(-10.0f, 0.0f, 0.0f);
+
+	// FieldBoundsを使用
+	Vector3 target(FieldBounds::LEFT, 0.0f, 0.0f);
 
 	Vector3 dir = target - p;
 	dir.Normalize();
@@ -415,11 +492,11 @@ Vector3 CpuAI::GetBounceShotDir()
 
 	Vector3 p = m_TargetPuck->GetTransform()->position;
 
-	// 狙う壁のポイント（敵陣深くの壁）
-	float targetWallX = -5.0f;
-	float targetWallZ = aimTop ? -9.0f : 9.0f; // 壁の向こう側を狙うイメージ
+	// ゴールの鏡像を狙う
+	float mirrorZ = aimTop ? (FieldBounds::TOP * 2.0f) : (FieldBounds::BOTTOM * 2.0f);
 
-	Vector3 target(targetWallX, 0.0f, targetWallZ);
+	Vector3 target(FieldBounds::LEFT, 0.0f, mirrorZ);
+
 	Vector3 dir = target - p;
 	dir.Normalize();
 	return dir;
@@ -438,4 +515,75 @@ Vector3 CpuAI::GetSafeClearDir()
 	Vector3 dir(-0.5f, 0.0f, targetZ);
 	dir.Normalize();
 	return dir;
+}
+
+// 最短迎撃ポイントの計算（シミュレーション）
+Vector3 CpuAI::CalculateInterceptionPos()
+{
+	Vector3 p = m_TargetPuck->GetTransform()->position;
+	float vx, vz;
+	m_TargetPuck->GetVelocity(vx, vz);
+	Vector3 v(vx, 0.0f, vz);
+
+	Vector3 myPos = m_Owner->GetTransform()->position;
+	float mySpeed = m_Owner->moveSpeed;
+	if (mySpeed <= 0.0f) return p;
+
+	const float dt = 0.05f;
+	const float maxTime = 2.0f;
+	const float GOAL_HALF_WIDTH = 4.0f; // ゴール幅（適宜調整）
+
+	for (float t = 0.0f; t < maxTime; t += dt)
+	{
+		p.x += v.x * dt;
+		p.z += v.z * dt;
+
+		// FieldBoundsを使用
+		if (p.z < FieldBounds::TOP)
+		{
+			p.z = FieldBounds::TOP + (FieldBounds::TOP - p.z);
+			v.z *= -1.0f;
+		}
+		else if (p.z > FieldBounds::BOTTOM)
+		{
+			p.z = FieldBounds::BOTTOM - (p.z - FieldBounds::BOTTOM);
+			v.z *= -1.0f;
+		}
+
+		// 自陣ゴール（RIGHT）に入りそうなら手前で止める
+		if (p.x > FieldBounds::RIGHT && std::abs(p.z) < GOAL_HALF_WIDTH)
+		{
+			p.x = FieldBounds::RIGHT - 0.5f;
+			return p;
+		}
+
+		Vector3 diff = p - myPos;
+		float dist = diff.Length();
+		float reachTime = dist / mySpeed;
+
+		if (reachTime <= t)
+		{
+			return p;
+		}
+	}
+
+	return p;
+}
+
+// デバッグ描画
+void CpuAI::DrawDebugGUI()
+{
+	if (!m_DebugFont) return;
+
+	// 画面右下に表示
+	float startX = SCREEN_WIDTH - 20.0f;
+	float startY = SCREEN_HEIGHT - 80.0f;
+
+	// ステート表示
+	std::wstring stateW = std::wstring(m_DebugStateStr.begin(), m_DebugStateStr.end());
+	TextRenderer::Draw(m_DebugFont, stateW, startX, startY, 1.0f, 0.2f, 0.2f, 1.0f, TextAlign::Right);
+
+	// 数値情報表示
+	std::wstring infoW = std::wstring(m_DebugInfoStr.begin(), m_DebugInfoStr.end());
+	TextRenderer::Draw(m_DebugFont, infoW, startX, startY + 30.0f, 0.8f, 0.8f, 0.8f, 1.0f, TextAlign::Right);
 }

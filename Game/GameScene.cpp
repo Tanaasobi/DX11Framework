@@ -143,18 +143,18 @@ void GameScene::Init()
 	AddGameObject(goalRight);
 
 	//--------------------------------------------------------------------------
+	// パック 
+	//--------------------------------------------------------------------------
+	Puck* puck = new Puck();
+	puck->Init(m_Shader, m_ParticleShader);
+	AddGameObject(puck);
+
+	//--------------------------------------------------------------------------
 	// プレイヤー
 	//--------------------------------------------------------------------------
 	Player* player = new Player();
 	player->Init(m_RimLightShader);
 	AddGameObject(player);
-
-	//--------------------------------------------------------------------------
-	// パック (CPUより先に生成する！)
-	//--------------------------------------------------------------------------
-	Puck* puck = new Puck();
-	puck->Init(m_Shader, m_ParticleShader);
-	AddGameObject(puck);
 
 	//--------------------------------------------------------------------------
 	// CPU
@@ -167,6 +167,7 @@ void GameScene::Init()
 	// AIコンポーネント追加
 	CpuAI* ai = cpu->AddComponent<CpuAI>();
 	ai->Init(cpu, puck);
+	m_CachedCpuAI = ai;
 
 	AddGameObject(cpu);
 
@@ -216,6 +217,7 @@ void GameScene::Uninit()
 
 	m_CachedPlayer = nullptr;
 	m_CachedCpu = nullptr;
+	m_CachedCpuAI = nullptr;
 	m_CachedPuck = nullptr;
 	m_GoalLeft = nullptr;
 	m_GoalRight = nullptr;
@@ -606,8 +608,15 @@ void GameScene::Render()
 
 	Scene::Render();
 
+	// シャドウマップSRVのバインド解除
 	ID3D11ShaderResourceView* nullSRV = nullptr;
 	context->PSSetShaderResources(1, 1, &nullSRV);
+
+	// デバッグUIの描画
+	if (m_CachedCpuAI)
+	{
+		m_CachedCpuAI->DrawDebugGUI();
+	}
 }
 
 //==============================================================================
