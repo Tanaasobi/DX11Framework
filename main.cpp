@@ -12,10 +12,9 @@
 #include "Core/Graphics/UI/TextRenderer.h"
 #include "Core/Scene/SceneManager.h"
 #include "Core/Audio/Audio.h"
-#include "Game/GameScene.h"
-#include "Game/TitleScene.h"
-#include "Game/ResultScene.h"
-
+#include "Game/Scenes/GameScene.h"
+#include "Game/Scenes/TitleScene.h"
+#include "Game/Scenes/ResultScene.h"
 //==============================================================================
 // グローバル変数
 //==============================================================================
