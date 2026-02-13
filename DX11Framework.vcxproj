@@ -140,9 +140,11 @@ xcopy /Y /E /I "$(ProjectDir)Asset" "$(OutDir)Asset"</Command>
     <ClCompile Include="Game\Goal.cpp" />
     <ClCompile Include="Game\Player.cpp" />
     <ClCompile Include="Game\Puck.cpp" />
+    <ClCompile Include="Game\ResultScene.cpp" />
     <ClCompile Include="Game\ScoreUI.cpp" />
     <ClCompile Include="Game\ScoreManager.cpp" />
     <ClCompile Include="Game\TestScene.cpp" />
+    <ClCompile Include="Game\TitleScene.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Core\Graphics\Renderer.cpp" />
   </ItemGroup>
@@ -203,9 +205,11 @@ xcopy /Y /E /I "$(ProjectDir)Asset" "$(OutDir)Asset"</Command>
     <ClInclude Include="Game\Goal.h" />
     <ClInclude Include="Game\Player.h" />
     <ClInclude Include="Game\Puck.h" />
+    <ClInclude Include="Game\ResultScene.h" />
     <ClInclude Include="Game\ScoreUI.h" />
     <ClInclude Include="Game\ScoreManager.h" />
     <ClInclude Include="Game\TestScene.h" />
+    <ClInclude Include="Game\TitleScene.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shader\ConfettiPixelShader.hlsl">
