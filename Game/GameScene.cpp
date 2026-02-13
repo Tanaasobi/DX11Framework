@@ -551,31 +551,11 @@ void GameScene::SpawnGoalConfetti(Team scoringTeam)
 //==============================================================================
 void GameScene::TryKickPuck()
 {
-	if (!m_CachedPlayer || !m_CachedPuck) return;
-
-	if (!m_CachedPlayer->CanKick()) return;
-
-	CircleCollider* playerCol = m_CachedPlayer->GetCollider();
-	CircleCollider* puckCol = m_CachedPuck->GetCollider();
-
-	if (!playerCol || !puckCol) return;
-
-	float dx = playerCol->GetX() - puckCol->GetX();
-	float dy = playerCol->GetY() - puckCol->GetY();
-	float dist = std::sqrt(dx * dx + dy * dy);
-
-	float kickRange = 3.0f;
-	if (dist > kickRange) return;
-
-	if (!m_CachedPlayer->TryKick()) return;
-
-	float dirX, dirZ;
-	m_CachedPlayer->GetKickDirection(dirX, dirZ);
-
-	float kickPower = 25.0f;
-	m_CachedPuck->SetVelocity(dirX * kickPower, dirZ * kickPower);
-
-	Logger::Info("Player kicked puck!");
+	if (m_CachedPlayer && m_CachedPuck)
+	{
+		// プレイヤーの入力に基づいてキック
+		m_CachedPlayer->Kick(m_CachedPuck);
+	}
 }
 
 //==============================================================================

@@ -433,15 +433,10 @@ void CpuAI::MoveTo(const Vector3& targetPos)
 
 bool CpuAI::TryKick(const Vector3& dir)
 {
-	if (!m_Owner->CanKick()) return false;
-
-	// キック実行（Playerクラスの機能を利用）
-	if (m_Owner->TryKick())
+	if (m_Owner && m_TargetPuck)
 	{
-		// AIの補正としてパックの速度を直接上書きして「狙った方向に蹴れた」ことにする
-		float kickPower = 25.0f;
-		m_TargetPuck->SetVelocity(dir.x * kickPower, dir.z * kickPower);
-		return true;
+		// 方向を指定してキック
+		return m_Owner->Kick(m_TargetPuck, dir);
 	}
 	return false;
 }
