@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 //==============================================================================
-// CpuAI.h - CPUの思考ロジックコンポーネント
+// CpuAI.h - 強化版CPUロジック
 //==============================================================================
 
 #include "Core/Object/Component.h"
@@ -14,10 +14,11 @@ class Puck;
 // AIの状態
 enum class CpuState
 {
-	Idle,       // 待機
-	Defend,     // 守備
-	Attack,     // 攻撃
-	Shoot       // シュート
+	Wait,       // 待機（自陣で様子見）
+	Defend,     // 守備（コースを塞ぐ・予測位置へ移動）
+	Attack,     // 攻撃（パックを奪いにいく）
+	Shoot,      // シュート動作中
+	Clear       // クリア動作中（守備からの蹴り出し）
 };
 
 class CpuAI : public Component
@@ -29,33 +30,62 @@ public:
 	void Init(Player* ownerPlayer, Puck* targetPuck);
 	void Update(float deltaTime) override;
 
-	// 外部から設定を変更する場合
+	// パラメータ設定（調整用）
 	void SetActive(bool active) { m_IsActive = active; }
 
 private:
 	// 参照
 	Player* m_Owner = nullptr;
 	Puck* m_TargetPuck = nullptr;
+	Player* m_EnemyPlayer = nullptr; // 相手プレイヤー（位置把握用）
 
-	// AIパラメータ
+	// 状態
 	bool m_IsActive = true;
-	CpuState m_State = CpuState::Idle;
+	CpuState m_State = CpuState::Wait;
 
-	// 乱数生成
+	// 乱数
 	std::mt19937 m_Rng;
-	std::uniform_real_distribution<float> m_KickIntervalRand;
 
-	// タイマー類
-	float m_KickTimer = 0.0f;
-	float m_KickInterval = 0.7f;
+	// 行動制御タイマー
+	float m_ActionTimer = 0.0f;
+	float m_ThinkInterval = 0.1f; // 思考更新間隔（毎フレーム判断するとブレるので）
+	float m_ThinkTimer = 0.0f;
 
-	// 定数（調整が必要なら外部化する）
-	const float DEFEND_LINE_X = 4.0f;
-	const float HOME_POS_X = 6.0f;
+	// パラメータ定数
+	const float DEFEND_LINE_X = 5.0f;     // 守備時の基本ライン（自陣ゴール前）
+	const float WAIT_POS_X = 3.0f;        // 待機時のライン
+	const float ATTACK_THRESHOLD_Z = 0.5f;// 攻撃時にどれくらい軸が合ったら突っ込むか
 
+	// 確率パラメータ (%)
+	const int PROB_WALL_SHOT = 40;        // 壁打ちシュートの確率
+	const int PROB_CLEAR_SAFE = 70;       // 安全な方向へクリアする確率
+
+	//--------------------------------------------------------------------------
 	// 内部ロジック
-	void UpdateState();
+	//--------------------------------------------------------------------------
+
+	// 判断
+	void UpdateDecision(float deltaTime);
+	void DecideState();
+	float CalculateReachTime(const Vector3& fromPos, float moveSpeed, const Vector3& targetPos);
+
+	// 行動実行
 	void ExecuteAction(float deltaTime);
-	void MoveToTarget(const Vector3& targetPos);
-	void GetShootDirection(float& outDirX, float& outDirZ);
+
+	// 各状態の挙動
+	void UpdateAttack();
+	void UpdateDefend();
+	void UpdateWait();
+	void UpdateShoot(float deltaTime);
+	void UpdateClear(float deltaTime);
+
+	// アクションヘルパー
+	void MoveTo(const Vector3& targetPos);
+	bool TryKick(const Vector3& dir);
+
+	// 計算ヘルパー
+	Vector3 PredictPuckPosOnLine(float targetX); // パックがXラインに到達する位置を予測（壁反射考慮）
+	Vector3 GetDirectShotDir();                  // ゴールへの直接シュート方向
+	Vector3 GetBounceShotDir();                  // 壁反射シュート方向
+	Vector3 GetSafeClearDir();                   // 敵がいない方向へのクリア方向
 };
