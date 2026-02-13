@@ -12,6 +12,7 @@
 
 class CircleCollider;
 class SkinnedMeshRenderer;
+class Puck;
 
 class Player : public GameObject
 {
@@ -23,10 +24,12 @@ public:
 	void Update(float deltaTime) override;
 
 	CircleCollider* GetCollider() const { return m_Collider; }
-	void GetKickDirection(float& outDirX, float& outDirZ);
 
-	// キック実行（成功したらtrue）
-	bool TryKick();
+	// キック実行（プレイヤー操作用）
+	bool Kick(Puck* targetPuck);
+
+	// キック実行(AI用)
+	bool Kick(Puck* targetPuck, const Vector3& dir);
 
 	// キック可能か
 	bool CanKick() const;
@@ -34,6 +37,8 @@ public:
 	// パラメータ
 	float moveSpeed = 12.0f;
 	float kickCooldown = 0.5f;
+	float kickPower = 25.0f;
+	float kickRange = 3.0f;
 
 	// 入力を有効/無効にする
 	void SetInputEnabled(bool enabled) { m_InputEnabled = enabled; }

@@ -3,6 +3,7 @@
 //==============================================================================
 
 #include "Player.h"
+#include "Puck.h"
 #include "Field.h"
 #include "Core/Graphics/SkinnedMeshRenderer.h"
 #include "Core/Physics/Collider.h"
@@ -220,25 +221,117 @@ void Player::Update(float deltaTime)
 }
 
 //==============================================================================
+// キック実行（入力デバイス依存）
+//==============================================================================
+bool Player::Kick(Puck* targetPuck)
+{
+	Vector3 kickDir(0.0f, 0.0f, 0.0f);
+	bool hasInput = false;
+
+	// 1. ゲームパッド右スティック判定
+	if (Input::IsGamepadConnected(0))
+	{
+		float rx, ry;
+		Input::GetGamepadRightStick(0, rx, ry);
+
+		// デッドゾーンチェック
+		if (rx * rx + ry * ry > 0.1f)
+		{
+			// 正規化して採用
+			Vector3 inputDir(rx, 0.0f, ry);
+			kickDir = inputDir.Normalized();
+			hasInput = true;
+		}
+	}
+
+	// 2. マウスカーソル判定（パッド入力がない場合）
+	if (!hasInput)
+	{
+		int screenX, screenY;
+		Input::GetMousePosition(screenX, screenY);
+
+		Camera* camera = Camera::GetMain();
+		if (camera)
+		{
+			Vector3 rayOrigin, rayDir;
+			camera->ScreenToWorldRay(screenX, screenY, rayOrigin, rayDir);
+
+			// Y=0 平面との交差判定
+			// rayOrigin.y + t * rayDir.y = 0  =>  t = -rayOrigin.y / rayDir.y
+			if (std::abs(rayDir.y) > 0.0001f)
+			{
+				float t = -rayOrigin.y / rayDir.y;
+				if (t > 0.0f)
+				{
+					Vector3 hitPos = rayOrigin + rayDir * t;
+
+					// プレイヤー位置からカーソル位置へのベクトル
+					Vector3 diff = hitPos - GetTransform()->position;
+					diff.y = 0.0f; // 水平成分のみ
+
+					if (diff.LengthSquared() > 0.001f)
+					{
+						kickDir = diff.Normalized();
+						hasInput = true;
+					}
+				}
+			}
+		}
+	}
+
+	// 3. 入力がなければ「プレイヤーの正面」へ
+	if (!hasInput)
+	{
+		constexpr float PI = 3.14159265f;
+		// m_CurrentRotationY は左手系・Z軸基準の回転角と想定
+		float rad = m_CurrentRotationY * (PI / 180.0f);
+		// 前進方向ベクトル (-sin, -cos) ※モデルやカメラの向きに依存
+		kickDir = Vector3(-std::sinf(rad), 0.0f, -std::cosf(rad));
+	}
+
+	// 方向指定版を呼び出す
+	return Kick(targetPuck, kickDir);
+}
+
+//==============================================================================
+// キック実行（方向指定）
+//==============================================================================
+bool Player::Kick(Puck* targetPuck, const Vector3& dir)
+{
+	if (!targetPuck) return false;
+	if (!CanKick()) return false;
+
+	// 距離判定
+	Vector3 myPos = GetTransform()->position;
+	Vector3 puckPos = targetPuck->GetTransform()->position;
+	Vector3 diff = myPos - puckPos;
+
+	// 平面距離で判定
+	float distSq = diff.x * diff.x + diff.z * diff.z;
+	if (distSq > kickRange * kickRange) return false;
+
+	// --- 実行 ---
+	m_KickCooldownTimer = kickCooldown;
+
+	if (m_Animator)
+	{
+		// 再生速度などの調整はお好みで
+		m_Animator->PlayOnce(m_KickAnim, 0.1f, 0.5f);
+	}
+
+	// パックに速度を与える
+	Vector3 force = dir.Normalized() * kickPower;
+	targetPuck->SetVelocity(force.x, force.z);
+
+	return true;
+}
+
+//==============================================================================
 // キック可能か
 //==============================================================================
 bool Player::CanKick() const
 {
 	return m_InputEnabled && m_KickCooldownTimer <= 0.0f;
-}
-//==============================================================================
-// キック実行
-//==============================================================================
-bool Player::TryKick()
-{
-	if (!CanKick()) return false;
-
-	m_KickCooldownTimer = kickCooldown;
-
-	// キックアニメーション再生（最大0.5秒で再生）
-	m_Animator->PlayOnce(m_KickAnim, 0.1f, 0.5f);
-
-	return true;
 }
 
 //==============================================================================
@@ -288,86 +381,6 @@ void Player::ClampToField()
 		FieldBounds::LEFT + halfSize, FieldBounds::RIGHT - halfSize);
 	transform->position.z = std::clamp(transform->position.z,
 		FieldBounds::TOP + halfSize, FieldBounds::BOTTOM - halfSize);
-}
-
-//==============================================================================
-// 蹴る方向を取得
-//==============================================================================
-void Player::GetKickDirection(float& outDirX, float& outDirZ)
-{
-	//--------------------------------------------------------------------------
-	// ゲームパッド（右スティック優先）
-	//--------------------------------------------------------------------------
-	if (Input::IsGamepadConnected(0))
-	{
-		float rx, ry;
-		Input::GetGamepadRightStick(0, rx, ry);
-
-		float len = std::sqrt(rx * rx + ry * ry);
-		if (len > 0.2f)
-		{
-			outDirX = rx / len;
-			outDirZ = ry / len;
-			return;
-		}
-
-		// 右スティック入力が無ければ「現在向いている方向」に蹴る
-		constexpr float PI = 3.14159265f;
-		float rad = m_CurrentRotationY * (PI / 180.0f);
-		outDirX = -std::sinf(rad);
-		outDirZ = -std::cosf(rad);
-		return;
-	}
-
-
-	int screenX, screenY;
-	Input::GetMousePosition(screenX, screenY);
-
-	Camera* camera = Camera::GetMain();
-	if (!camera)
-	{
-		outDirX = 0.0f;
-		outDirZ = 1.0f;
-		return;
-	}
-
-	Vector3 rayOrigin, rayDir;
-	camera->ScreenToWorldRay(screenX, screenY, rayOrigin, rayDir);
-
-	if (std::abs(rayDir.y) < 0.0001f)
-	{
-		outDirX = 0.0f;
-		outDirZ = 1.0f;
-		return;
-	}
-
-	float t = -rayOrigin.y / rayDir.y;
-	if (t < 0.0f)
-	{
-		outDirX = 0.0f;
-		outDirZ = 1.0f;
-		return;
-	}
-
-	Vector3 mouseWorld;
-	mouseWorld.x = rayOrigin.x + rayDir.x * t;
-	mouseWorld.z = rayOrigin.z + rayDir.z * t;
-
-	Transform* transform = GetTransform();
-	float dx = mouseWorld.x - transform->position.x;
-	float dz = mouseWorld.z - transform->position.z;
-
-	float len = std::sqrt(dx * dx + dz * dz);
-	if (len > 0.0f)
-	{
-		outDirX = dx / len;
-		outDirZ = dz / len;
-	}
-	else
-	{
-		outDirX = 0.0f;
-		outDirZ = 1.0f;
-	}
 }
 
 //==============================================================================
