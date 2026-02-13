@@ -134,6 +134,7 @@ xcopy /Y /E /I "$(ProjectDir)Asset" "$(OutDir)Asset"</Command>
     <ClCompile Include="Core\System\Time.cpp" />
     <ClCompile Include="Core\Object\Transform.cpp" />
     <ClCompile Include="Game\CountDownUI.cpp" />
+    <ClCompile Include="Game\CpuAI.cpp" />
     <ClCompile Include="Game\Field.cpp" />
     <ClCompile Include="Game\GameScene.cpp" />
     <ClCompile Include="Game\Goal.cpp" />
@@ -195,6 +196,7 @@ xcopy /Y /E /I "$(ProjectDir)Asset" "$(OutDir)Asset"</Command>
     <ClInclude Include="Core\Object\Transform.h" />
     <ClInclude Include="Core\Math\Vector3.h" />
     <ClInclude Include="Game\CountDownUI.h" />
+    <ClInclude Include="Game\CpuAI.h" />
     <ClInclude Include="Game\Field.h" />
     <ClInclude Include="Game\GameScene.h" />
     <ClInclude Include="Game\GameState.h" />

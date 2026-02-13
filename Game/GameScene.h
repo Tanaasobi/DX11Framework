@@ -8,7 +8,6 @@
 #include "Core/Graphics/Shader/IShader.h"
 #include "Goal.h"
 #include "GameState.h"
-#include <random>
 
 class Player;
 class Puck;
@@ -67,23 +66,13 @@ private:
 	int m_CountdownValue = 3;
 	Team m_LastScoredTeam = Team::Left;  // 最後に得点したチーム
 
-	// CPU関連
-	std::mt19937 m_Rng{ std::random_device{}() };
-	std::uniform_real_distribution<float> m_CpuKickIntervalRand{ 0.7f, 1.3f };
-	float m_CpuKickInterval = 0.7f;
-	float m_CpuKickTimer = 0.0f;
-
 	// 内部関数
 	void CacheGameObjects();
-	void TryKickPuck();
+	void TryKickPuck(); // プレイヤー用
 	void CheckGoal();
 	void SpawnGoalConfetti(Team scoringTeam);
 	void ResetRound(Team scoredAgainstTeam);
 	void ResetPositions();
-
-	void UpdateCpuAI(float deltaTime);
-	void GetCpuShootDirection(float& outDirX, float& outDirZ);
-	bool TryKickPuck(Player* kicker, float dirX, float dirZ);
 
 	// 状態更新
 	void UpdateReady(float deltaTime);

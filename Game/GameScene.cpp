@@ -4,6 +4,7 @@
 
 #include "GameScene.h"
 #include "Player.h"
+#include "CpuAI.h" // AIコンポーネントを追加
 #include "Puck.h"
 #include "Field.h"
 #include "Goal.h"
@@ -149,21 +150,25 @@ void GameScene::Init()
 	AddGameObject(player);
 
 	//--------------------------------------------------------------------------
+	// パック (CPUより先に生成する！)
+	//--------------------------------------------------------------------------
+	Puck* puck = new Puck();
+	puck->Init(m_Shader, m_ParticleShader);
+	AddGameObject(puck);
+
+	//--------------------------------------------------------------------------
 	// CPU
 	//--------------------------------------------------------------------------
 	Player* cpu = new Player();
 	cpu->SetName("CPU");
 	cpu->Init(m_RimLightShaderCpu);
 	cpu->GetTransform()->position = Vector3(8.0f, 0.0f, 0.0f);
-	cpu->EnableExternalInput(true);
-	AddGameObject(cpu);
 
-	//--------------------------------------------------------------------------
-	// パック
-	//--------------------------------------------------------------------------
-	Puck* puck = new Puck();
-	puck->Init(m_Shader, m_ParticleShader);
-	AddGameObject(puck);
+	// AIコンポーネント追加
+	CpuAI* ai = cpu->AddComponent<CpuAI>();
+	ai->Init(cpu, puck);
+
+	AddGameObject(cpu);
 
 	//--------------------------------------------------------------------------
 	// 紙吹雪
@@ -343,8 +348,7 @@ void GameScene::UpdatePlaying(float deltaTime)
 		TryKickPuck();
 	}
 
-	// CPU AI
-	UpdateCpuAI(deltaTime);
+	// CPU AI更新はコンポーネント(CpuAI)側で行われるため削除
 
 	// ゴール判定
 	CheckGoal();
@@ -542,7 +546,7 @@ void GameScene::SpawnGoalConfetti(Team scoringTeam)
 }
 
 //==============================================================================
-// 蹴る処理
+// 蹴る処理（プレイヤー用）
 //==============================================================================
 void GameScene::TryKickPuck()
 {
@@ -571,114 +575,6 @@ void GameScene::TryKickPuck()
 	m_CachedPuck->SetVelocity(dirX * kickPower, dirZ * kickPower);
 
 	Logger::Info("Player kicked puck!");
-}
-
-//==============================================================================
-// 蹴る処理（共通）
-//==============================================================================
-bool GameScene::TryKickPuck(Player* kicker, float dirX, float dirZ)
-{
-	if (!kicker || !m_CachedPuck) return false;
-	if (!kicker->CanKick()) return false;
-
-	CircleCollider* kickerCol = kicker->GetCollider();
-	CircleCollider* puckCol = m_CachedPuck->GetCollider();
-	if (!kickerCol || !puckCol) return false;
-
-	float dx = kickerCol->GetX() - puckCol->GetX();
-	float dy = kickerCol->GetY() - puckCol->GetY();
-	float dist = std::sqrt(dx * dx + dy * dy);
-
-	float kickRange = 3.0f;
-	if (dist > kickRange) return false;
-
-	if (!kicker->TryKick()) return false;
-
-	float kickPower = 25.0f;
-	m_CachedPuck->SetVelocity(dirX * kickPower, dirZ * kickPower);
-
-	return true;
-}
-
-//==============================================================================
-// CPU AI更新
-//==============================================================================
-void GameScene::UpdateCpuAI(float deltaTime)
-{
-	if (!m_CachedCpu || !m_CachedPuck) return;
-
-	// 入力無効なら何もしない
-	if (!m_CachedCpu->IsInputEnabled())
-	{
-		return;
-	}
-
-	Vector3 cpuPos = m_CachedCpu->GetTransform()->position;
-	Vector3 puckPos = m_CachedPuck->GetTransform()->position;
-
-	// パックに向かって移動
-	float dx = puckPos.x - cpuPos.x;
-	float dz = puckPos.z - cpuPos.z;
-	float dist = std::sqrt(dx * dx + dz * dz);
-
-	if (dist > 0.5f)
-	{
-		float moveX = dx / dist;
-		float moveZ = dz / dist;
-		m_CachedCpu->SetMoveInput(moveX, moveZ);
-	}
-	else
-	{
-		m_CachedCpu->SetMoveInput(0.0f, 0.0f);
-	}
-
-	// キック判定
-	m_CpuKickTimer -= deltaTime;
-	if (m_CpuKickTimer <= 0.0f && dist < 2.5f)
-	{
-		float kickDirX, kickDirZ;
-		GetCpuShootDirection(kickDirX, kickDirZ);
-
-		if (TryKickPuck(m_CachedCpu, kickDirX, kickDirZ))
-		{
-			Logger::Info("CPU kicked puck!");
-		}
-
-		m_CpuKickTimer = m_CpuKickIntervalRand(m_Rng);
-	}
-}
-//==============================================================================
-// CPUの蹴る方向
-//==============================================================================
-void GameScene::GetCpuShootDirection(float& outDirX, float& outDirZ)
-{
-	// 相手ゴール（左ゴール）に向かって蹴る
-	if (m_CachedPuck)
-	{
-		Vector3 puckPos = m_CachedPuck->GetTransform()->position;
-		float targetX = FieldBounds::LEFT;
-		float targetZ = 0.0f;
-
-		float dx = targetX - puckPos.x;
-		float dz = targetZ - puckPos.z;
-		float len = std::sqrt(dx * dx + dz * dz);
-
-		if (len > 0.0f)
-		{
-			outDirX = dx / len;
-			outDirZ = dz / len;
-		}
-		else
-		{
-			outDirX = -1.0f;
-			outDirZ = 0.0f;
-		}
-	}
-	else
-	{
-		outDirX = -1.0f;
-		outDirZ = 0.0f;
-	}
 }
 
 //==============================================================================
