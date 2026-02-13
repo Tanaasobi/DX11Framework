@@ -345,7 +345,7 @@ void GameScene::UpdatePlaying(float deltaTime)
 {
 	// プレイヤーの蹴り
 	if (Input::GetKeyDown(KeyCode::MouseLeft) || Input::GetKeyDown(KeyCode::Space) ||
-		Input::GetGamepadButtonDown(0, GamepadButton::A))
+		Input::GetGamepadRightTrigger(0) > 0.3f)
 	{
 		TryKickPuck();
 	}
@@ -382,11 +382,11 @@ void GameScene::UpdateGoal(float deltaTime)
 //==============================================================================
 void GameScene::UpdateGameOver(float deltaTime)
 {
-	// スペースキーまたはクリックでリスタート
+	// スペースキーまたはクリックでリザルトへ
 	if (Input::GetKeyDown(KeyCode::Space) || Input::GetKeyDown(KeyCode::MouseLeft) ||
 		Input::GetGamepadButtonDown(0, GamepadButton::A))
 	{
-		SceneManager::ReloadCurrentScene();
+		SceneManager::LoadScene("ResultScene");
 	}
 }
 

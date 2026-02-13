@@ -13,6 +13,8 @@
 #include "Core/Scene/SceneManager.h"
 #include "Core/Audio/Audio.h"
 #include "Game/GameScene.h"
+#include "Game/TitleScene.h"
+#include "Game/ResultScene.h"
 
 //==============================================================================
 // グローバル変数
@@ -190,9 +192,11 @@ int WINAPI WinMain(
 
 	// シーンを登録
 	SceneManager::RegisterScene<GameScene>("GameScene");
+	SceneManager::RegisterScene<TitleScene>("TitleScene");
+	SceneManager::RegisterScene<ResultScene>("ResultScene");
 
 	// 初期シーンをロード
-	SceneManager::LoadScene("GameScene");
+	SceneManager::LoadScene("TitleScene");
 
 	Logger::Info("Game started!");
 
