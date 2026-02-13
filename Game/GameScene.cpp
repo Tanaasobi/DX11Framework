@@ -350,7 +350,6 @@ void GameScene::UpdatePlaying(float deltaTime)
 		TryKickPuck();
 	}
 
-	// CPU AI更新はコンポーネント(CpuAI)側で行われるため削除
 
 	// ゴール判定
 	CheckGoal();

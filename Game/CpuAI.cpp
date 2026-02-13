@@ -98,6 +98,32 @@ void CpuAI::UpdateDecision(float deltaTime)
 	// シュートやクリアなどのアクション中は状態を変えない
 	if (m_State == CpuState::Shoot || m_State == CpuState::Clear) return;
 
+	// キック判定だけは毎フレーム行う
+	Vector3 puckPos = m_TargetPuck->GetTransform()->position;
+	Vector3 myPos = m_Owner->GetTransform()->position;
+
+	// キック可能範囲内に入ったら即キック
+	Vector3 diff = myPos - puckPos;
+	float distSq = diff.LengthSquared(); // x*x + y*y + z*z
+
+	if (distSq < 3.0f * 3.0f && m_Owner->CanKick())
+	{
+		// 自陣深くならクリア、敵陣寄りならシュート
+		if (puckPos.x > 0.0f)
+		{
+			m_State = CpuState::Clear;
+			m_DebugStateStr = "Action: CLEAR (Instant)";
+		}
+		else
+		{
+			m_State = CpuState::Shoot;
+			m_DebugStateStr = "Action: SHOOT (Instant)";
+		}
+		m_ActionTimer = 0.2f; // アクション予備動作時間
+		return;
+	}
+
+	// 移動方針（攻守）の決定は、これまで通り一定間隔で行う（ジッタリング防止）
 	m_ThinkTimer -= deltaTime;
 	if (m_ThinkTimer <= 0.0f)
 	{
@@ -114,28 +140,7 @@ void CpuAI::DecideState()
 	float puckVelZ = 0.0f;
 	m_TargetPuck->GetVelocity(puckVelX, puckVelZ);
 
-	// --- 1. キック範囲内判定 ---
-	Vector3 diff = myPos - puckPos;
-	float distSq = diff.LengthSquared();
-
-	if (distSq < 2.5f * 2.5f && m_Owner->CanKick())
-	{
-		// 自陣深くならクリア、敵陣寄りならシュート
-		if (puckPos.x > 0.0f)
-		{
-			m_State = CpuState::Clear;
-			m_DebugStateStr = "Action: CLEAR";
-		}
-		else
-		{
-			m_State = CpuState::Shoot;
-			m_DebugStateStr = "Action: SHOOT";
-		}
-		m_ActionTimer = 0.2f; // アクション予備動作時間
-		return;
-	}
-
-	// --- 2. 到達時間計算 ---
+	// --- 到達時間計算 ---
 	float myReachTime = CalculateReachTime(myPos, m_Owner->moveSpeed, puckPos);
 	float enemyReachTime = 100.0f;
 
@@ -145,7 +150,7 @@ void CpuAI::DecideState()
 			m_EnemyPlayer->moveSpeed, puckPos);
 	}
 
-	// --- 3. ステート決定ロジック ---
+	// --- ステート決定ロジック ---
 	bool isPuckComing = (puckVelX > 0.5f); // パックが自陣（右）に向かっている
 	bool isPuckInMySide = (puckPos.x > 0.0f); // パックが自陣にある
 
