@@ -4,7 +4,8 @@
 
 #include "GameScene.h"
 #include "Game/Objects/Player.h"
-#include "Game/Components/CpuAI.h" // AIコンポーネントを追加
+#include "Game/Components/CpuAI.h"
+#include "Game/Components/CameraShake.h"
 #include "Game/Objects/Puck.h"
 #include "Game/Objects/Field.h"
 #include "Game/Objects/Goal.h"
@@ -30,6 +31,7 @@
 #include "Core/Physics/Collision.h"
 #include "Core/Physics/Collider.h"
 #include <cmath>
+
 
 using namespace DirectX;
 
@@ -124,11 +126,14 @@ void GameScene::Init()
 	camera->fov = 45.0f;
 	cameraObj->GetTransform()->position = Vector3(0.0f, 35.0f, -20.0f);
 	cameraObj->GetTransform()->SetEulerAngles(60.0f, 0.0f, 0.0f);
+	// BGM再生
 	auto bgmComp = cameraObj->AddComponent<AudioComponent>();  // カメラにAudioComponentを追加してBGMを再生
 	bgmComp->Load("Asset/Audio/bgm.wav");
 	bgmComp->SetVolume(0.1f);
 	bgmComp->Play(true); // ループ再生
-
+	// カメラシェイクコンポーネントも追加
+	auto shakeComp = cameraObj->AddComponent<CameraShake>();
+	
 	//--------------------------------------------------------------------------
 	// フィールド
 	//--------------------------------------------------------------------------
