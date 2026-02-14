@@ -22,6 +22,7 @@
 #include "Core/Graphics/Particle/ConfettiShader.h"
 #include "Core/Graphics/ShadowMap.h"
 #include "Core/Graphics/Texture.h"
+#include "Core/Audio/AudioComponent.h"
 #include "Core/Object/Camera.h"
 #include "Core/System/Input.h"
 #include "Core/System/Logger.h"
@@ -123,6 +124,10 @@ void GameScene::Init()
 	camera->fov = 45.0f;
 	cameraObj->GetTransform()->position = Vector3(0.0f, 35.0f, -20.0f);
 	cameraObj->GetTransform()->SetEulerAngles(60.0f, 0.0f, 0.0f);
+	auto bgmComp = cameraObj->AddComponent<AudioComponent>();  // カメラにAudioComponentを追加してBGMを再生
+	bgmComp->Load("Asset/Audio/bgm.wav");
+	bgmComp->SetVolume(0.1f);
+	bgmComp->Play(true); // ループ再生
 
 	//--------------------------------------------------------------------------
 	// フィールド
@@ -136,10 +141,16 @@ void GameScene::Init()
 	//--------------------------------------------------------------------------
 	Goal* goalLeft = new Goal(Team::Left);
 	goalLeft->Init(m_Shader);
+	auto goalComp = goalLeft->AddComponent<AudioComponent>();
+	goalComp->Load("Asset/Audio/se_goal.wav");
+	goalComp->SetVolume(0.7f);
 	AddGameObject(goalLeft);
 
 	Goal* goalRight = new Goal(Team::Right);
 	goalRight->Init(m_Shader);
+	goalComp = goalRight->AddComponent<AudioComponent>();
+	goalComp->Load("Asset/Audio/se_goal.wav");
+	goalComp->SetVolume(0.7f);
 	AddGameObject(goalRight);
 
 	//--------------------------------------------------------------------------
@@ -147,6 +158,9 @@ void GameScene::Init()
 	//--------------------------------------------------------------------------
 	Puck* puck = new Puck();
 	puck->Init(m_Shader, m_ParticleShader);
+	auto hitComp = puck->AddComponent<AudioComponent>();
+	hitComp->Load("Asset/Audio/se_hit.wav");
+	hitComp->SetVolume(0.7f);
 	AddGameObject(puck);
 
 	//--------------------------------------------------------------------------
@@ -501,6 +515,13 @@ void GameScene::CheckGoal()
 		m_CachedPuck->SetVelocity(0.0f, 0.0f);
 		m_CachedPuck->GetTransform()->position = Vector3(0.0f, -10.0f, 0.0f);  // 画面外
 
+		// ゴール音再生
+		auto goalAudio = m_GoalLeft->GetComponent<AudioComponent>();
+		if (goalAudio)
+		{
+			goalAudio->Play();
+		}
+
 		ChangeState(GameState::Goal);
 		return;
 	}
@@ -516,6 +537,13 @@ void GameScene::CheckGoal()
 		// パックを即座に停止・非表示位置に移動
 		m_CachedPuck->SetVelocity(0.0f, 0.0f);
 		m_CachedPuck->GetTransform()->position = Vector3(0.0f, -10.0f, 0.0f);  // 画面外
+
+		// ゴール音再生
+		auto goalAudio = m_GoalRight->GetComponent<AudioComponent>();
+		if (goalAudio)
+		{
+			goalAudio->Play();
+		}
 
 		ChangeState(GameState::Goal);
 		return;

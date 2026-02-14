@@ -6,6 +6,7 @@
 #include "Puck.h"
 #include "Field.h"
 #include "Core/Graphics/SkinnedMeshRenderer.h"
+#include "Core/Audio/AudioComponent.h"
 #include "Core/Physics/Collider.h"
 #include "Core/System/Input.h"
 #include "Core/System/Logger.h"
@@ -311,6 +312,14 @@ bool Player::Kick(Puck* targetPuck, const Vector3& dir)
 	if (distSq > kickRange * kickRange) return false;
 
 	// --- 実行 ---
+	// ヒット音再生
+	auto hitAudio = targetPuck->GetComponent<AudioComponent>();
+	if (hitAudio)
+	{
+		hitAudio->Play();
+	}
+
+	// クールダウン開始
 	m_KickCooldownTimer = kickCooldown;
 
 	if (m_Animator)
