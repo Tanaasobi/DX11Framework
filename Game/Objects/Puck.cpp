@@ -4,13 +4,13 @@
 
 #include "Puck.h"
 #include "Field.h"
-#include "Core/Graphics/MeshRenderer.h"
-#include "Core/Graphics/Texture.h"
+#include "Core/Graphics/ModelRenderer.h"
+#include "Core/Graphics/Model.h"        
 #include "Core/Physics/Collider.h"
 #include "Core/Physics/Collision.h"
-#include "Core/Graphics/Particle/ParticleEmitter.h"
-#include "Core/Graphics/Particle/ParticleShader.h"
-#include <cmath>
+#include "Core/System/Logger.h"
+#include "Core/Math/Vector3.h"
+#include "Game/Components/TrailRenderer.h"
 
 //==============================================================================
 // コンストラクタ
@@ -25,70 +25,53 @@ Puck::Puck()
 //==============================================================================
 Puck::~Puck()
 {
+	// モデルのメモリ解放
+	if (m_Model)
+	{
+		delete m_Model;
+		m_Model = nullptr;
+	}
 }
 
 //==============================================================================
 // 初期化
 //==============================================================================
-void Puck::Init(IShader* shader, ParticleShader* particleShader)
+void Puck::Init(IShader* shader)
 {
-	// メッシュ追加
-	MeshRenderer* renderer = AddComponent<MeshRenderer>();
-	renderer->CreateCube(0.6f);
-	renderer->SetShader(shader);
-
-	// マテリアル（青っぽく）
-	MATERIAL mat = {};
-	mat.Ambient = DirectX::XMFLOAT4(0.1f, 0.1f, 0.3f, 1.0f);
-	mat.Diffuse = DirectX::XMFLOAT4(0.3f, 0.5f, 1.0f, 1.0f);
-	mat.Specular = DirectX::XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
-	mat.Emission = DirectX::XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
-	mat.Shininess = 20.0f;
-	mat.TextureEnable = FALSE;
-	renderer->SetMaterial(mat);
-
-	// コライダー追加
-	m_Collider = AddComponent<CircleCollider>();
-	m_Collider->radius = 0.3f;
-
-	// パーティクルトレイル（雷風）
-	if (particleShader)
+	//--------------------------------------------------------------------------
+	// モデル読み込み & レンダラー設定
+	//--------------------------------------------------------------------------
+	m_Model = new Model();
+	// モデルのパスを指定 (Assetフォルダ内のパスを確認してください)
+	if (!m_Model->Load("Asset/Model/puck.fbx"))
 	{
-		m_TrailEmitter = AddComponent<ParticleEmitter>();
-		m_TrailEmitter->Init(500);
-		m_TrailEmitter->SetShader(particleShader);
-		m_TrailEmitter->SetTexture("Asset/Texture/particle.png");
-
-		// 雷っぽいパラメータ
-		m_TrailEmitter->settings.emitRate = 300.0f;
-		m_TrailEmitter->settings.lifeMin = 0.05f;
-		m_TrailEmitter->settings.lifeMax = 0.2f;
-		m_TrailEmitter->settings.sizeStart = 0.5f;
-		m_TrailEmitter->settings.sizeEnd = 0.0f;
-
-		// ジグザグ感を出すためにランダム速度を大きく
-		m_TrailEmitter->settings.velocityMin = Vector3(-4.0f, -1.0f, -4.0f);
-		m_TrailEmitter->settings.velocityMax = Vector3(4.0f, 2.0f, 4.0f);
-		m_TrailEmitter->settings.acceleration = Vector3(0, 0, 0);
-
-		// 雷の色（白〜青紫）
-		m_TrailEmitter->settings.colorStart = { 1.0f, 1.0f, 1.0f, 1.0f };
-		m_TrailEmitter->settings.colorEnd = { 0.3f, 0.5f, 1.0f, 0.0f };
-
-		// 加算ブレンドで光らせる
-		m_TrailEmitter->settings.additiveBlend = true;
-
-		// 回転でキラキラ感
-		m_TrailEmitter->settings.rotationMin = 0.0f;
-		m_TrailEmitter->settings.rotationMax = 360.0f;
-		m_TrailEmitter->settings.rotationSpeedMin = -720.0f;
-		m_TrailEmitter->settings.rotationSpeedMax = 720.0f;
-
-		m_TrailEmitter->Stop();
+		Logger::Error("Failed to load puck model!");
 	}
 
-	// 初期位置
-	GetTransform()->position = Vector3(0.0f, 0.3f, 0.0f);
+	ModelRenderer* renderer = AddComponent<ModelRenderer>();
+	renderer->SetModel(m_Model);
+	renderer->SetShader(shader);
+
+	// モデルのサイズに合わせてスケール調整
+	GetTransform()->scale = Vector3(0.5f, 0.5f, 0.5f);
+
+	// コライダー設定
+	m_Collider = AddComponent<CircleCollider>();
+	m_Collider->radius = 0.49f; // モデルの半径に合わせて調整
+
+	//--------------------------------------------------------------------------
+	// トレイル (リボン軌跡) の設定
+	//--------------------------------------------------------------------------
+	m_Trail = AddComponent<TrailRenderer>();
+
+	// テクスチャロード (パスは適宜変更してください)
+	m_Trail->Init("Asset/Texture/Trail.png", 10.f, 5.f);
+
+	// 色の設定 (鮮やかな水色 -> 透明)
+	m_Trail->SetColor(
+		DirectX::XMFLOAT4(0.2f, 0.8f, 1.0f, 0.8f), // 始点
+		DirectX::XMFLOAT4(0.0f, 0.2f, 1.0f, 0.0f)  // 終点
+	);
 }
 
 //==============================================================================
@@ -108,40 +91,45 @@ void Puck::Update(float deltaTime)
 
 	// 壁反射
 	ReflectWalls();
-
-	// トレイル制御
-	if (m_TrailEmitter)
-	{
-		float speed = std::sqrt(m_VelX * m_VelX + m_VelZ * m_VelZ);
-
-		if (speed > 1.0f)
-		{
-			m_TrailEmitter->Play();
-
-			// 速度に応じてエフェクト調整
-			m_TrailEmitter->settings.emitRate = 100.0f + speed * 30.0f;
-			m_TrailEmitter->settings.sizeStart = 0.3f + speed * 0.05f;
-
-			// 速いほどジグザグ強く
-			float jitter = speed * 0.5f;
-			m_TrailEmitter->settings.velocityMin = Vector3(-jitter, -jitter * 0.3f, -jitter);
-			m_TrailEmitter->settings.velocityMax = Vector3(jitter, jitter * 0.5f, jitter);
-		}
-		else
-		{
-			m_TrailEmitter->Stop();
-		}
-	}
 }
 
 //==============================================================================
-// 摩擦適用
+// 速度設定
+//==============================================================================
+void Puck::SetVelocity(float vx, float vz)
+{
+	m_VelX = vx;
+	m_VelZ = vz;
+}
+
+//==============================================================================
+// 速度取得
+//==============================================================================
+void Puck::GetVelocity(float& outVX, float& outVZ) const
+{
+	outVX = m_VelX;
+	outVZ = m_VelZ;
+}
+
+//==============================================================================
+// 力を加える
+//==============================================================================
+void Puck::Push(float pushX, float pushZ)
+{
+	Transform* transform = GetTransform();
+	transform->position.x += pushX;
+	transform->position.z += pushZ;
+}
+
+//==============================================================================
+// 摩擦
 //==============================================================================
 void Puck::ApplyFriction()
 {
 	m_VelX *= friction;
 	m_VelZ *= friction;
 
+	// 最小速度以下なら停止
 	float speed = std::sqrt(m_VelX * m_VelX + m_VelZ * m_VelZ);
 	if (speed < minSpeed)
 	{
@@ -198,32 +186,4 @@ void Puck::ReflectWalls()
 
 	transform->position.x = posX;
 	transform->position.z = posZ;
-}
-
-//==============================================================================
-// 速度設定
-//==============================================================================
-void Puck::SetVelocity(float vx, float vz)
-{
-	m_VelX = vx;
-	m_VelZ = vz;
-}
-
-//==============================================================================
-// 速度取得
-//==============================================================================
-void Puck::GetVelocity(float& outVX, float& outVZ) const
-{
-	outVX = m_VelX;
-	outVZ = m_VelZ;
-}
-
-//==============================================================================
-// 押し出し
-//==============================================================================
-void Puck::Push(float pushX, float pushZ)
-{
-	Transform* transform = GetTransform();
-	transform->position.x += pushX;
-	transform->position.z += pushZ;
 }

@@ -134,6 +134,7 @@ xcopy /Y /E /I "$(ProjectDir)Asset" "$(OutDir)Asset"</Command>
     <ClCompile Include="Core\System\Time.cpp" />
     <ClCompile Include="Core\Object\Transform.cpp" />
     <ClCompile Include="Game\Components\CameraShake.cpp" />
+    <ClCompile Include="Game\Components\TrailRenderer.cpp" />
     <ClCompile Include="Game\UI\CountDownUI.cpp" />
     <ClCompile Include="Game\Components\CpuAI.cpp" />
     <ClCompile Include="Game\Scenes\Field.cpp" />
@@ -199,6 +200,7 @@ xcopy /Y /E /I "$(ProjectDir)Asset" "$(OutDir)Asset"</Command>
     <ClInclude Include="Core\Object\Transform.h" />
     <ClInclude Include="Core\Math\Vector3.h" />
     <ClInclude Include="Game\Components\CameraShake.h" />
+    <ClInclude Include="Game\Components\TrailRenderer.h" />
     <ClInclude Include="Game\UI\CountDownUI.h" />
     <ClInclude Include="Game\Components\CpuAI.h" />
     <ClInclude Include="Game\Objects\Field.h" />
@@ -378,6 +380,22 @@ xcopy /Y /E /I "$(ProjectDir)Asset" "$(OutDir)Asset"</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="Shader\TrailPixelShader.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="Shader\TrailVertexShader.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
     </FxCompile>
     <FxCompile Include="Shader\VertexShader.hlsl">
