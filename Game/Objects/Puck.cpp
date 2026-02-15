@@ -67,7 +67,7 @@ void Puck::Init(IShader* shader)
 	// テクスチャロード
 	m_Trail->Init("Asset/Texture/Trail_alpha.png", 0.7f, 0.7f);
 
-	// 色の設定 (鮮やかな水色 -> 透明)
+	// 色の設定 (鮮やかな水色 -> 透明)git 
 	m_Trail->SetColor(
 		DirectX::XMFLOAT4(0.2f, 0.8f, 1.0f, 0.8f), // 始点
 		DirectX::XMFLOAT4(0.0f, 0.2f, 1.0f, 0.0f)  // 終点
