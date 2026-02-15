@@ -199,6 +199,14 @@ void GameScene::Init()
 	m_ConfettiEmitter->SetShader(m_ConfettiShader);
 	m_ConfettiEmitter->SetTexture(Texture::Load("Asset/Texture/white.png"));
 
+	// パラメータ調整
+	m_ConfettiEmitter->initialSpeedMin = 5.0f;
+	m_ConfettiEmitter->initialSpeedMax = 40.0f;
+	m_ConfettiEmitter->spreadX = 20.0f;
+	m_ConfettiEmitter->spreadY = 5.0f;
+	m_ConfettiEmitter->spreadZ = 20.0f;
+	m_ConfettiEmitter->gravity = 9.0f;
+
 	//--------------------------------------------------------------------------
 	// UI
 	//--------------------------------------------------------------------------
@@ -576,7 +584,7 @@ void GameScene::SpawnGoalConfetti(Team scoringTeam)
 		direction = Vector3(1.0f, 0.0f, 0.0f);
 	}
 
-	m_ConfettiEmitter->Burst(2000, spawnPos, direction);
+	m_ConfettiEmitter->Burst(4000, spawnPos, direction);
 }
 
 //==============================================================================
