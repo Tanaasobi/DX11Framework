@@ -162,7 +162,7 @@ void GameScene::Init()
 	// パック 
 	//--------------------------------------------------------------------------
 	Puck* puck = new Puck();
-	puck->Init(m_Shader, m_ParticleShader);
+	puck->Init(m_Shader);
 	auto hitComp = puck->AddComponent<AudioComponent>();
 	hitComp->Load("Asset/Audio/se_hit.wav");
 	hitComp->SetVolume(0.7f);

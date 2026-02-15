@@ -8,8 +8,8 @@
 #include "Core/Graphics/Shader/IShader.h"
 
 class CircleCollider;
-class ParticleEmitter;
-class ParticleShader;
+class TrailRenderer;
+class Model; // 前方宣言
 
 class Puck : public GameObject
 {
@@ -17,7 +17,8 @@ public:
 	Puck();
 	virtual ~Puck();
 
-	void Init(IShader* shader, ParticleShader* particleShader);
+	// ParticleShader 引数を削除 (トレイル方式に変更のため)
+	void Init(IShader* shader);
 	void Update(float deltaTime) override;
 
 	CircleCollider* GetCollider() const { return m_Collider; }
@@ -32,7 +33,8 @@ public:
 
 private:
 	CircleCollider* m_Collider = nullptr;
-	ParticleEmitter* m_TrailEmitter = nullptr;
+	TrailRenderer* m_Trail = nullptr;
+	Model* m_Model = nullptr; // モデルリソースの管理用
 
 	float m_VelX = 0.0f;
 	float m_VelZ = 0.0f;
