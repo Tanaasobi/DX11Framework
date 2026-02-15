@@ -6,7 +6,8 @@
 #include "Core/Graphics/Texture.h"
 #include "Core/Graphics/Renderer.h"
 #include "Core/System/Logger.h"
-#include "Core/Graphics/Shader/Shader.h" // Shaderクラスの定義用
+#include "Core/Graphics/Shader/Shader.h"
+#include <algorithm>
 
 using namespace DirectX;
 
@@ -16,7 +17,6 @@ using namespace DirectX;
 class TrailShader : public Shader
 {
 public:
-	// 入力レイアウトの定義
 	bool CreateInputLayout(ID3DBlob* vsBlob) override
 	{
 		D3D11_INPUT_ELEMENT_DESC layout[] =
@@ -51,11 +51,12 @@ void TrailRenderer::Init(const std::string& texturePath, float width, float life
 	m_Width = width;
 	m_Lifetime = lifetime;
 
-	// シェーダーのロード
+	// 滑らかに描画するために最小距離を小さく設定
+	m_MinVertexDistance = 0.01f;
+
 	m_Shader = new TrailShader();
 	m_Shader->Load(L"Shader/TrailVertexShader.hlsl", L"Shader/TrailPixelShader.hlsl");
 
-	// テクスチャのロード (戻り値は ID3D11ShaderResourceView* です)
 	m_TextureSRV = Texture::Load(texturePath);
 
 	CreateVertexBuffer();
@@ -63,10 +64,9 @@ void TrailRenderer::Init(const std::string& texturePath, float width, float life
 
 void TrailRenderer::CreateVertexBuffer()
 {
-	// 動的バッファとして作成
 	D3D11_BUFFER_DESC bd = {};
 	bd.Usage = D3D11_USAGE_DYNAMIC;
-	bd.ByteWidth = sizeof(TrailVertex) * 2000; // 十分なサイズを確保
+	bd.ByteWidth = sizeof(TrailVertex) * 4000;
 	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	Renderer::GetDevice()->CreateBuffer(&bd, nullptr, &m_VertexBuffer);
@@ -82,13 +82,16 @@ void TrailRenderer::Update(float deltaTime)
 {
 	if (!GetGameObject()) return;
 
-	// 1. 新しいポイントの追加
 	Vector3 posVec = GetGameObject()->GetTransform()->position;
-	XMFLOAT3 currentPos = { posVec.x, posVec.y, posVec.z };
 
-	// Time::GetTime() は無いので GetTotalTime() を使用
+	// 床(Y=0)との干渉を防ぐため、Y座標を少し浮かせて固定する
+	// これにより「高さのブレ」によるメッシュの歪みを防ぎます
+	float fixedY = 0.05f;
+
+	XMFLOAT3 currentPos = { posVec.x, fixedY, posVec.z };
 	float currentTime = Time::GetTotalTime();
 
+	// ポイント追加判定
 	bool shouldAdd = false;
 	if (m_Points.empty())
 	{
@@ -97,10 +100,8 @@ void TrailRenderer::Update(float deltaTime)
 	else
 	{
 		XMFLOAT3 lastPos = m_Points.back().Position;
-		// 距離チェック
 		float distSq = (currentPos.x - lastPos.x) * (currentPos.x - lastPos.x) +
-			(currentPos.y - lastPos.y) * (currentPos.y - lastPos.y) +
-			(currentPos.z - lastPos.z) * (currentPos.z - lastPos.z);
+			(currentPos.z - lastPos.z) * (currentPos.z - lastPos.z); // Y軸は無視してXZ距離で判定
 
 		if (distSq > m_MinVertexDistance * m_MinVertexDistance)
 		{
@@ -116,7 +117,7 @@ void TrailRenderer::Update(float deltaTime)
 		m_Points.push_back(pt);
 	}
 
-	// 2. 寿命切れのポイントを削除
+	// 寿命削除
 	while (!m_Points.empty())
 	{
 		if (currentTime - m_Points.front().Time > m_Lifetime)
@@ -135,47 +136,57 @@ void TrailRenderer::UpdateVertexBuffer()
 	if (m_Points.size() < 2 || !m_VertexBuffer) return;
 
 	std::vector<TrailVertex> vertices;
-	Camera* camera = Camera::GetMain();
-	if (!camera) return;
-
-	// CameraはComponentなのでGameObject経由でTransformを取得
-	Vector3 camPosVec = camera->GetGameObject()->GetTransform()->position;
-	XMVECTOR camPos = XMLoadFloat3((XMFLOAT3*)&camPosVec);
+	vertices.reserve(m_Points.size() * 2);
 
 	float currentTime = Time::GetTotalTime();
 
-	// ポイント間を繋ぐリボンを生成
+	// 床と水平にするための「上ベクトル」を(0,1,0)に固定
+	XMVECTOR upVector = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+
 	for (size_t i = 0; i < m_Points.size(); ++i)
 	{
 		const auto& pt = m_Points[i];
 		XMVECTOR pCurrent = XMLoadFloat3(&pt.Position);
 
-		// 進行方向の計算
+		// 進行方向ベクトルの計算
 		XMVECTOR forward;
-		if (i < m_Points.size() - 1)
+
+		if (i == m_Points.size() - 1 && i > 0)
 		{
-			XMVECTOR pNext = XMLoadFloat3(&m_Points[i + 1].Position);
-			forward = XMVectorSubtract(pNext, pCurrent);
-		}
-		else
-		{
+			// 最新の点: 1つ前の点からのベクトルを使用
 			XMVECTOR pPrev = XMLoadFloat3(&m_Points[i - 1].Position);
 			forward = XMVectorSubtract(pCurrent, pPrev);
 		}
-		forward = XMVector3Normalize(forward);
+		else if (i < m_Points.size() - 1)
+		{
+			// それ以外の点: 次の点へのベクトルを使用
+			XMVECTOR pNext = XMLoadFloat3(&m_Points[i + 1].Position);
+			forward = XMVectorSubtract(pNext, pCurrent);
+		}
+		else // ポイントが1つしかない等の例外
+		{
+			forward = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f); // デフォルトX軸
+		}
 
-		// カメラへの方向
-		XMVECTOR toCam = XMVectorSubtract(camPos, pCurrent);
+		// 長さが0に近い場合の安全対策
+		if (XMVectorGetX(XMVector3LengthSq(forward)) < 0.00001f)
+		{
+			forward = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f); // 仮の向き
+		}
+		else
+		{
+			forward = XMVector3Normalize(forward);
+		}
 
-		// ビルボード用の右ベクトル
-		XMVECTOR right = XMVector3Cross(forward, toCam);
+		// 進行方向(Forward)と上(Y軸)の外積で「右(Right)」を求める
+		// これにより、リボンは常にXZ平面と平行になります
+		XMVECTOR right = XMVector3Cross(forward, upVector);
 		right = XMVector3Normalize(right);
 
-		// 寿命に応じた色の補間率
+		// 色と太さ
 		float age = currentTime - pt.Time;
 		float alphaRatio = 1.0f - (age / m_Lifetime);
-		if (alphaRatio < 0) alphaRatio = 0;
-		if (alphaRatio > 1) alphaRatio = 1;
+		alphaRatio = std::max(0.0f, std::min(1.0f, alphaRatio));
 
 		XMFLOAT4 color;
 		color.x = m_StartColor.x * alphaRatio + m_EndColor.x * (1 - alphaRatio);
@@ -183,22 +194,20 @@ void TrailRenderer::UpdateVertexBuffer()
 		color.z = m_StartColor.z * alphaRatio + m_EndColor.z * (1 - alphaRatio);
 		color.w = m_StartColor.w * alphaRatio + m_EndColor.w * (1 - alphaRatio);
 
+		// 太さ調整 (先端ほど細くする)
+		float widthScale = alphaRatio;
+
 		// UV
 		float u = static_cast<float>(i) / (m_Points.size() - 1);
 
-		// 太さ調整 (先端ほど細く)
-		float widthScale = alphaRatio;
-
-		// 頂点生成
 		TrailVertex v1, v2;
 		XMVECTOR vOffset = XMVectorScale(right, m_Width * 0.5f * widthScale);
 
-		// 上側
+		// 左右の頂点を生成
 		XMStoreFloat3(&v1.Position, XMVectorAdd(pCurrent, vOffset));
 		v1.Color = color;
 		v1.TexCoord = { u, 0.0f };
 
-		// 下側
 		XMStoreFloat3(&v2.Position, XMVectorSubtract(pCurrent, vOffset));
 		v2.Color = color;
 		v2.TexCoord = { u, 1.0f };
@@ -207,12 +216,12 @@ void TrailRenderer::UpdateVertexBuffer()
 		vertices.push_back(v1);
 	}
 
-	// バッファ転送
 	D3D11_MAPPED_SUBRESOURCE ms;
 	ID3D11DeviceContext* context = Renderer::GetDeviceContext();
 	if (SUCCEEDED(context->Map(m_VertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &ms)))
 	{
 		size_t dataSize = vertices.size() * sizeof(TrailVertex);
+		if (dataSize > sizeof(TrailVertex) * 4000) dataSize = sizeof(TrailVertex) * 4000;
 		memcpy(ms.pData, vertices.data(), dataSize);
 		context->Unmap(m_VertexBuffer, 0);
 	}
@@ -220,31 +229,38 @@ void TrailRenderer::UpdateVertexBuffer()
 
 void TrailRenderer::Render()
 {
+	// ポイントが少なければ描画しない
 	if (m_Points.size() < 2) return;
 
+	// 頂点バッファ更新
 	UpdateVertexBuffer();
 
 	ID3D11DeviceContext* context = Renderer::GetDeviceContext();
 
-	// ステート設定: 修正ポイント
-	// Renderer::SetDepthState は無いので、EnableとWriteEnableを個別に呼ぶ
+	// 深度ステート (奥行き判定はするが、書き込みはしない)
 	Renderer::SetDepthEnable(true);
-	Renderer::SetDepthWriteEnable(false); // 半透明なので書き込みOFF
+	Renderer::SetDepthWriteEnable(false);
 
-	// Renderer::SetBlendState は無いので、BlendModeを使用
-	Renderer::SetBlendMode(BlendMode::Alpha);
-	Renderer::SetCullingMode(false); // 両面描画
+
+	// ラスタライザステート 
+	// カリングなし(CULL_NONE) & ソリッド表示(FILL_SOLID) を強制的に適用
+	static ID3D11RasterizerState* cullNoneState = nullptr;
+	if (!cullNoneState)
+	{
+		D3D11_RASTERIZER_DESC desc = {};
+		desc.FillMode = D3D11_FILL_SOLID; 
+		desc.CullMode = D3D11_CULL_NONE;  // 裏面も描画する (カリングなし)
+		desc.FrontCounterClockwise = FALSE;
+		desc.DepthClipEnable = TRUE;
+		Renderer::GetDevice()->CreateRasterizerState(&desc, &cullNoneState);
+	}
+	context->RSSetState(cullNoneState);
 
 	// シェーダーセット
 	m_Shader->Set();
 
-	// 行列の設定
-	// TrailVertexShaderでは View, Projection を使う
-	// Trailの頂点はワールド座標系で作っているので、World行列は単位行列にする
+	// 行列セット
 	Renderer::SetWorldMatrix(XMMatrixIdentity());
-
-	// View, Projectionは現在のカメラのものがRendererに設定済みと仮定できるが、
-	// 念のためカメラから取得してセットするなら以下
 	Camera* camera = Camera::GetMain();
 	if (camera)
 	{
@@ -258,15 +274,21 @@ void TrailRenderer::Render()
 		context->PSSetShaderResources(0, 1, &m_TextureSRV);
 	}
 
-	// 描画
+	// 描画実行
 	UINT stride = sizeof(TrailVertex);
 	UINT offset = 0;
 	context->IASetVertexBuffers(0, 1, &m_VertexBuffer, &stride, &offset);
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 
-	context->Draw((UINT)m_Points.size() * 2, 0);
+	UINT drawCount = (UINT)m_Points.size() * 2;
+	// 上限キャップ (バッファサイズに合わせて調整)
+	if (drawCount > 4000) drawCount = 4000;
 
-	// 設定を戻す
+	context->Draw(drawCount, 0);
+
+	// ステートを元に戻す
 	Renderer::SetDepthWriteEnable(true);
+
+	// ラスタライザをデフォルト(裏面カリング)に戻しておく
 	Renderer::SetCullingMode(true);
 }

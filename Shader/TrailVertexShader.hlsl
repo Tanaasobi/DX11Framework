@@ -1,4 +1,8 @@
-// フレームワークの仕様に合わせてバッファを分割
+//==============================================================================
+// TrailVertexShader.hlsl
+//==============================================================================
+
+// フレームワークのRenderer仕様に合わせてバッファを分割 (b0, b1, b2)
 cbuffer WorldBuffer : register(b0)
 {
     matrix World;
@@ -30,13 +34,12 @@ PS_INPUT main(VS_INPUT input)
 {
     PS_INPUT output;
     
-    // 座標変換
-    // WorldはC++側で単位行列を入れているはずだが、形式上一応掛ける
+    // トレイルの頂点はC++側で既にワールド座標として計算済み
+    // World行列は単位行列のはずだが、形式的に掛けておく
     matrix wvp = mul(World, View);
     wvp = mul(wvp, Projection);
     
     output.Position = mul(float4(input.Position, 1.0f), wvp);
-    
     output.Color = input.Color;
     output.TexCoord = input.TexCoord;
     

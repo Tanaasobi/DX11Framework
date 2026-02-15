@@ -3,7 +3,7 @@
 #include <deque>
 #include <vector>
 #include <DirectXMath.h>
-#include <d3d11.h> // ID3D11Buffer等のために必要
+#include <d3d11.h>
 
 // 頂点構造体
 struct TrailVertex
@@ -37,6 +37,9 @@ public:
 	// 幅の設定
 	void SetWidth(float width) { m_Width = width; }
 
+	// 頂点を追加する最小移動距離を設定（小さくすると滑らかになりますが負荷が増えます）
+	void SetMinVertexDistance(float distance) { m_MinVertexDistance = distance; }
+
 private:
 	// 内部シェーダークラス
 	class TrailShader* m_Shader = nullptr;
@@ -47,7 +50,10 @@ private:
 
 	float m_Width = 1.0f;
 	float m_Lifetime = 0.5f;
-	float m_MinVertexDistance = 0.1f; // この距離以上動いたらポイントを追加
+
+	// デフォルト値を小さく変更 (0.1 -> 0.01)
+	// これにより、遅い移動でもトレイルが途切れなくなります
+	float m_MinVertexDistance = 0.01f;
 
 	DirectX::XMFLOAT4 m_StartColor = { 1.0f, 1.0f, 1.0f, 1.0f };
 	DirectX::XMFLOAT4 m_EndColor = { 1.0f, 1.0f, 1.0f, 0.0f };

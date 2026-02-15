@@ -64,14 +64,17 @@ void Puck::Init(IShader* shader)
 	//--------------------------------------------------------------------------
 	m_Trail = AddComponent<TrailRenderer>();
 
-	// テクスチャロード (パスは適宜変更してください)
-	m_Trail->Init("Asset/Texture/Trail.png", 10.f, 5.f);
+	// テクスチャロード
+	m_Trail->Init("Asset/Texture/Trail_alpha.png", 0.7f, 0.7f);
 
 	// 色の設定 (鮮やかな水色 -> 透明)
 	m_Trail->SetColor(
 		DirectX::XMFLOAT4(0.2f, 0.8f, 1.0f, 0.8f), // 始点
 		DirectX::XMFLOAT4(0.0f, 0.2f, 1.0f, 0.0f)  // 終点
 	);
+
+	// 滑らかさを出すために、頂点生成の最小距離を小さく設定する
+	m_Trail->SetMinVertexDistance(0.01f);
 }
 
 //==============================================================================
@@ -79,18 +82,16 @@ void Puck::Init(IShader* shader)
 //==============================================================================
 void Puck::Update(float deltaTime)
 {
-	GameObject::Update(deltaTime);
-
-	// 速度適用
+	// 移動計算
 	Transform* transform = GetTransform();
 	transform->position.x += m_VelX * deltaTime;
 	transform->position.z += m_VelZ * deltaTime;
 
-	// 摩擦適用
+	// 物理挙動・補正（摩擦・壁反射）
 	ApplyFriction();
-
-	// 壁反射
 	ReflectWalls();
+
+	GameObject::Update(deltaTime);
 }
 
 //==============================================================================
