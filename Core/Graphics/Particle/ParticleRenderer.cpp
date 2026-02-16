@@ -119,6 +119,7 @@ void ParticleRenderer::UpdateInstanceBuffer(const std::vector<Particle>& particl
 		instances[index].Size = p.size;
 		instances[index].Color = p.color;
 		instances[index].Rotation = p.rotation;
+		instances[index].Velocity = p.velocity.ToXMFLOAT3();
 		index++;
 	}
 
@@ -153,6 +154,7 @@ void ParticleRenderer::Render(int activeCount)
 	// 深度テスト有効、書き込み無効（オブジェクトの後ろに隠れる）
 	Renderer::SetDepthEnable(true);
 	Renderer::SetDepthWriteEnable(false);
+	Renderer::SetCullingMode(false); // カリング無効（両面描画）
 
 	ID3D11Buffer* buffers[2] = { m_VertexBuffer, m_InstanceBuffer };
 	UINT strides[2] = { sizeof(ParticleVertex), sizeof(ParticleInstance) };
@@ -164,6 +166,7 @@ void ParticleRenderer::Render(int activeCount)
 	context->DrawInstanced(4, activeCount, 0, 0);
 
 	// 設定を戻す
+	Renderer::SetCullingMode(true);
 	Renderer::SetDepthWriteEnable(true);
 	Renderer::SetBlendMode(BlendMode::Alpha);
 }

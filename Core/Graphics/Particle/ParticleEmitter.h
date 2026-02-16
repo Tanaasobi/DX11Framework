@@ -34,6 +34,7 @@ public:
 	void Play() { m_IsPlaying = true; }
 	void Stop() { m_IsPlaying = false; }
 	void Burst(int count);  // 一度に大量発生
+	void Burst(int count, const Vector3& position, const Vector3& direction, float speed, float spread = 0.5f);
 
 private:
 	ParticlePool     m_Pool;
