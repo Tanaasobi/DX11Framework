@@ -9,7 +9,9 @@
 
 class CircleCollider;
 class TrailRenderer;
-class Model; // 前方宣言
+class ParticleEmitter;
+class ParticleShader;
+class Model;
 
 class Puck : public GameObject
 {
@@ -17,7 +19,6 @@ public:
 	Puck();
 	virtual ~Puck();
 
-	// ParticleShader 引数を削除 (トレイル方式に変更のため)
 	void Init(IShader* shader);
 	void Update(float deltaTime) override;
 
@@ -35,6 +36,9 @@ private:
 	CircleCollider* m_Collider = nullptr;
 	TrailRenderer* m_Trail = nullptr;
 	Model* m_Model = nullptr; // モデルリソースの管理用
+
+	ParticleEmitter* m_Sparks = nullptr; // 衝突エフェクト用のパーティクルエミッター
+	ParticleShader* m_SparkShader = nullptr;
 
 	float m_VelX = 0.0f;
 	float m_VelZ = 0.0f;

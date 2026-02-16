@@ -347,7 +347,7 @@ void Renderer::SetCullingMode(bool enableCulling)
     if (enableCulling)
         m_DeviceContext->RSSetState(m_RasterizerCullBack);
     else
-		m_DeviceContext->RSSetState(m_RasterizerCullFront);
+		m_DeviceContext->RSSetState(m_RasterizerCullNone);
 }
 
 //==============================================================================

@@ -73,6 +73,7 @@ bool ParticleShader::Load(const std::wstring& vsFile, const std::wstring& psFile
 		{ "INST_SIZE",     0, DXGI_FORMAT_R32_FLOAT,       1, 12, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
 		{ "INST_COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 16, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
 		{ "INST_ROTATION", 0, DXGI_FORMAT_R32_FLOAT,       1, 32, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+		{ "INST_VELOCITY", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1, 36, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
 	};
 
 	hr = device->CreateInputLayout(layout, ARRAYSIZE(layout),

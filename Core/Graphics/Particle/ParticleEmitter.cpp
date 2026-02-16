@@ -101,6 +101,49 @@ void ParticleEmitter::Burst(int count)
 	}
 }
 
+void ParticleEmitter::Burst(int count, const Vector3& position, const Vector3& direction, float speed, float spread)
+{
+	for (int i = 0; i < count; i++)
+	{
+		Particle* p = m_Pool.Emit();
+		if (!p) return;
+
+		// 指定された位置にセット
+		p->position = position;
+
+		// 方向の計算（指定方向 + ランダムな拡散）
+		Vector3 randomDir;
+		randomDir.x = RandomRange(-1.0f, 1.0f);
+		randomDir.y = RandomRange(-1.0f, 1.0f) * spread; // 垂直方向への拡散量を調整
+		randomDir.z = RandomRange(-1.0f, 1.0f);
+
+		// directionが (0,0,0) でないことを前提とします
+		Vector3 finalDir = direction + (randomDir * spread);
+		finalDir.Normalize();
+
+		// 速度設定（指定速度に少しばらつきを持たせる）
+		float finalSpeed = speed * RandomRange(0.8f, 1.5f);
+		p->velocity = finalDir * finalSpeed;
+
+		// その他のパラメータは settings からコピー
+		p->acceleration = settings.acceleration;
+
+		p->life = RandomRange(settings.lifeMin, settings.lifeMax);
+		p->lifeMax = p->life;
+
+		p->sizeStart = settings.sizeStart;
+		p->sizeEnd = settings.sizeEnd;
+		p->size = p->sizeStart;
+
+		p->rotation = RandomRange(settings.rotationMin, settings.rotationMax);
+		p->rotationSpeed = RandomRange(settings.rotationSpeedMin, settings.rotationSpeedMax);
+
+		p->colorStart = settings.colorStart;
+		p->colorEnd = settings.colorEnd;
+		p->color = p->colorStart;
+	}
+}
+
 float ParticleEmitter::RandomRange(float min, float max)
 {
 	std::uniform_real_distribution<float> dist(min, max);

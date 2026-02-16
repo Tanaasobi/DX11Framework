@@ -23,6 +23,7 @@ struct VS_INPUT
     float InstSize : INST_SIZE;
     float4 InstColor : INST_COLOR;
     float InstRotation : INST_ROTATION;
+    float3 InstVelocity : INST_VELOCITY;
 };
 
 struct VS_OUTPUT

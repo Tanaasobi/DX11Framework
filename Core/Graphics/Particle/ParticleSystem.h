@@ -38,7 +38,7 @@ struct ParticleInstance
 	float             Size;
 	DirectX::XMFLOAT4 Color;
 	float             Rotation;
-	float             Padding[3];
+	DirectX::XMFLOAT3 Velocity;
 };
 
 //==============================================================================
@@ -77,6 +77,9 @@ struct ParticleSettings
 
 	// ブレンドモード
 	bool additiveBlend = true;
+
+	//　垂直方向への拡散量（0で完全に水平、1で全方向）
+	float spread = 0.5f;
 };
 
 //==============================================================================
