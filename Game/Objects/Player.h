@@ -13,6 +13,7 @@
 class CircleCollider;
 class SkinnedMeshRenderer;
 class Puck;
+class RingGauge;
 
 class Player : public GameObject
 {
@@ -29,16 +30,24 @@ public:
 	bool Kick(Puck* targetPuck);
 
 	// キック実行(AI用)
-	bool Kick(Puck* targetPuck, const Vector3& dir);
+	bool Kick(Puck* targetPuck, const Vector3& dir, float powerOverride = -1.0f);
 
 	// キック可能か
 	bool CanKick() const;
+
+	// チャージ操作
+	void StartCharge();
+	bool ReleaseKick(Puck* targetPuck);
 
 	// パラメータ
 	float moveSpeed = 12.0f;
 	float kickCooldown = 0.5f;
 	float kickPower = 25.0f;
-	float kickRange = 3.0f;
+	float kickRange = 1.7f;
+
+	// チャージ用パラメータ
+	float maxKickPower = 50.0f; // 最大チャージ時のパワー
+	float maxChargeTime = 1.0f; // 最大パワーまでの時間（秒）
 
 	// 入力を有効/無効にする
 	void SetInputEnabled(bool enabled) { m_InputEnabled = enabled; }
@@ -65,6 +74,13 @@ private:
 	bool  m_WasMoving = false;
 	float m_CurrentRotationY = 0.0f;
 	bool m_InputEnabled = true;
+
+	// チャージゲージUI
+	RingGauge* m_ChargeGauge = nullptr;
+
+	// チャージ状態
+	bool m_IsCharging = false;
+	float m_ChargeTimer = 0.0f;
 
 	// キック状態
 	float m_KickCooldownTimer = 0.0f;

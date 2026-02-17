@@ -106,7 +106,7 @@ void CpuAI::UpdateDecision(float deltaTime)
 	Vector3 diff = myPos - puckPos;
 	float distSq = diff.LengthSquared(); // x*x + y*y + z*z
 
-	if (distSq < 3.0f * 3.0f && m_Owner->CanKick())
+	if (distSq < 1.7f * 1.7f && m_Owner->CanKick())
 	{
 		// 自陣深くならクリア、敵陣寄りならシュート
 		if (puckPos.x > 0.0f)

@@ -370,13 +370,25 @@ void GameScene::UpdateCountdown(float deltaTime)
 //==============================================================================
 void GameScene::UpdatePlaying(float deltaTime)
 {
-	// プレイヤーの蹴り
+	// チャージ開始
 	if (Input::GetKeyDown(KeyCode::MouseLeft) || Input::GetKeyDown(KeyCode::Space) ||
-		Input::GetGamepadRightTrigger(0) > 0.3f)
+		Input::GetGamepadButtonDown(0, GamepadButton::RightShoulder)) // RBに変更または適宜調整
 	{
-		TryKickPuck();
+		if (m_CachedPlayer)
+		{
+			m_CachedPlayer->StartCharge();
+		}
 	}
 
+	// チャージ解放＆シュート
+	if (Input::GetKeyUp(KeyCode::MouseLeft) || Input::GetKeyUp(KeyCode::Space) ||
+		Input::GetGamepadButtonUp(0, GamepadButton::RightShoulder))
+	{
+		if (m_CachedPlayer && m_CachedPuck)
+		{
+			m_CachedPlayer->ReleaseKick(m_CachedPuck);
+		}
+	}
 
 	// ゴール判定
 	CheckGoal();
