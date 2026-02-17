@@ -5,6 +5,7 @@
 #include "Player.h"
 #include "Puck.h"
 #include "Field.h"
+#include "Game/Components/RingGauge.h"
 #include "Core/Graphics/SkinnedMeshRenderer.h"
 #include "Core/Audio/AudioComponent.h"
 #include "Core/Physics/Collider.h"
@@ -114,6 +115,15 @@ void Player::Init(IShader* shader)
 	m_CurrentRotationY = 0.0f;
 	GetTransform()->SetEulerAngles(0.0f, m_CurrentRotationY, 0.0f);
 
+	// --------------------------------------------------------------------------
+	// チャージゲージUIの設定
+	// --------------------------------------------------------------------------
+	m_ChargeGauge = AddComponent<RingGauge>();
+	m_ChargeGauge->Init(kickRange, 0.9f);
+	m_ChargeGauge->SetColor(1.0f, 0.5f, 0.0f, 0.8f); // オレンジ色
+	m_ChargeGauge->SetVisible(false);
+
+
 	Logger::Info("Player initialized with animations");
 }
 
@@ -122,6 +132,34 @@ void Player::Init(IShader* shader)
 //==============================================================================
 void Player::Update(float deltaTime)
 {
+	// チャージ更新
+	if (m_IsCharging)
+	{
+		m_ChargeTimer += deltaTime;
+		if (m_ChargeTimer > maxChargeTime)
+		{
+			m_ChargeTimer = maxChargeTime;
+		}
+
+		// ゲージ更新
+		float progress = m_ChargeTimer / maxChargeTime;
+		if (m_ChargeGauge)
+		{
+			m_ChargeGauge->SetProgress(progress);
+
+			// チャージ完了時に色を変えるなどの演出も可能
+			if (progress >= 1.0f)
+			{
+				m_ChargeGauge->SetColor(1.0f, 0.0f, 0.0f, 0.9f); // 赤く発光
+			}
+			else
+			{
+				m_ChargeGauge->SetColor(1.0f, 0.6f, 0.0f, 0.6f); // 通常オレンジ
+			}
+		}
+	}
+
+	// コンポーネントの更新
 	GameObject::Update(deltaTime);
 
 	// クールダウン更新
@@ -297,7 +335,7 @@ bool Player::Kick(Puck* targetPuck)
 //==============================================================================
 // キック実行（方向指定）
 //==============================================================================
-bool Player::Kick(Puck* targetPuck, const Vector3& dir)
+bool Player::Kick(Puck* targetPuck, const Vector3& dir, float powerOverride)
 {
 	if (!targetPuck) return false;
 	if (!CanKick()) return false;
@@ -309,7 +347,8 @@ bool Player::Kick(Puck* targetPuck, const Vector3& dir)
 
 	// 平面距離で判定
 	float distSq = diff.x * diff.x + diff.z * diff.z;
-	if (distSq > kickRange * kickRange) return false;
+	float validRange = kickRange + 0.5f;
+	if (distSq > validRange * validRange) return false;
 
 	// --- 実行 ---
 	// ヒット音再生
@@ -324,15 +363,106 @@ bool Player::Kick(Puck* targetPuck, const Vector3& dir)
 
 	if (m_Animator)
 	{
-		// 再生速度などの調整はお好みで
 		m_Animator->PlayOnce(m_KickAnim, 0.1f, 0.5f);
 	}
+
+	float currentPower = (powerOverride > 0.0f) ? powerOverride : kickPower;
 
 	// パックに速度を与える
 	Vector3 force = dir.Normalized() * kickPower;
 	targetPuck->SetVelocity(force.x, force.z);
 
+	if (currentPower > kickPower * 1.2f) {
+		targetPuck->SetPowerMode(true);
+	}
+	else {
+		targetPuck->SetPowerMode(false);
+	}
+
 	return true;
+}
+
+//==============================================================================
+// チャージ開始
+//==============================================================================
+void Player::StartCharge()
+{
+	m_IsCharging = true;
+	m_ChargeTimer = 0.0f;
+
+	// ゲージを表示
+	if (m_ChargeGauge)
+	{
+		m_ChargeGauge->SetProgress(0.0f);
+		m_ChargeGauge->SetVisible(true);
+	}
+}
+
+//==============================================================================
+// チャージ解放（シュート）
+//==============================================================================
+bool Player::ReleaseKick(Puck* targetPuck)
+{
+	m_IsCharging = false;
+
+	// チャージ率 (0.0 ～ 1.0)
+	float t = m_ChargeTimer / maxChargeTime;
+
+	// パワーを線形補間 (通常パワー ～ 最大パワー)
+	float power = kickPower + (maxKickPower - kickPower) * t;
+
+	// 入力デバイスから方向を取得（キック関数に任せる）
+	Vector3 kickDir(0.0f, 0.0f, 0.0f);
+	bool hasInput = false;
+
+	// ゲームパッド
+	if (Input::IsGamepadConnected(0))
+	{
+		float rx, ry;
+		Input::GetGamepadRightStick(0, rx, ry);
+		if (rx * rx + ry * ry > 0.1f) {
+			kickDir = Vector3(rx, 0.0f, ry).Normalized();
+			hasInput = true;
+		}
+	}
+	// マウス
+	if (!hasInput)
+	{
+		int screenX, screenY;
+		Input::GetMousePosition(screenX, screenY);
+		Camera* camera = Camera::GetMain();
+		if (camera) {
+			Vector3 rayOrigin, rayDir;
+			camera->ScreenToWorldRay(screenX, screenY, rayOrigin, rayDir);
+			if (std::abs(rayDir.y) > 0.0001f) {
+				float t = -rayOrigin.y / rayDir.y;
+				if (t > 0.0f) {
+					Vector3 hitPos = rayOrigin + rayDir * t;
+					Vector3 diff = hitPos - GetTransform()->position;
+					diff.y = 0.0f;
+					if (diff.LengthSquared() > 0.001f) {
+						kickDir = diff.Normalized();
+						hasInput = true;
+					}
+				}
+			}
+		}
+	}
+	// 正面
+	if (!hasInput)
+	{
+		float rad = m_CurrentRotationY * (3.14159265f / 180.0f);
+		kickDir = Vector3(-std::sinf(rad), 0.0f, -std::cosf(rad));
+	}
+
+	// ゲージを非表示
+	if (m_ChargeGauge)
+	{
+		m_ChargeGauge->SetVisible(false);
+	}
+
+	// 計算したパワーと方向でキック実行
+	return Kick(targetPuck, kickDir, power);
 }
 
 //==============================================================================

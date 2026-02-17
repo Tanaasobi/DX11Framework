@@ -28,6 +28,8 @@ public:
 	void GetVelocity(float& outVX, float& outVZ) const;
 	void Push(float pushX, float pushZ);
 
+	void SetPowerMode(bool enabled);
+
 	float friction = 0.998f;
 	float restitution = 0.9f;
 	float minSpeed = 0.1f;

@@ -108,6 +108,7 @@ xcopy /Y /E /I "$(ProjectDir)Asset" "$(OutDir)Asset"</Command>
     <ClCompile Include="Core\Graphics\Particle\ParticleShader.cpp" />
     <ClCompile Include="Core\Graphics\Particle\ParticleSystem.cpp" />
     <ClCompile Include="Core\Graphics\Shader\FieldShadowShader.cpp" />
+    <ClCompile Include="Core\Graphics\Shader\GaugeShader.cpp" />
     <ClCompile Include="Core\Graphics\Shader\RimLightSkinnedShader.cpp" />
     <ClCompile Include="Core\Graphics\Shader\ShadowMapShader.cpp" />
     <ClCompile Include="Core\Graphics\ShadowMap.cpp" />
@@ -134,6 +135,7 @@ xcopy /Y /E /I "$(ProjectDir)Asset" "$(OutDir)Asset"</Command>
     <ClCompile Include="Core\System\Time.cpp" />
     <ClCompile Include="Core\Object\Transform.cpp" />
     <ClCompile Include="Game\Components\CameraShake.cpp" />
+    <ClCompile Include="Game\Components\RingGauge.cpp" />
     <ClCompile Include="Game\Components\TrailRenderer.cpp" />
     <ClCompile Include="Game\UI\CountDownUI.cpp" />
     <ClCompile Include="Game\Components\CpuAI.cpp" />
@@ -168,6 +170,7 @@ xcopy /Y /E /I "$(ProjectDir)Asset" "$(OutDir)Asset"</Command>
     <ClInclude Include="Core\Graphics\Particle\ParticleShader.h" />
     <ClInclude Include="Core\Graphics\Particle\ParticleSystem.h" />
     <ClInclude Include="Core\Graphics\Shader\FieldShadowShader.h" />
+    <ClInclude Include="Core\Graphics\Shader\GaugeShader.h" />
     <ClInclude Include="Core\Graphics\Shader\IShader.h" />
     <ClInclude Include="Core\Graphics\Shader\RimLightSkinnedShader.h" />
     <ClInclude Include="Core\Graphics\Shader\ShadowMapShader.h" />
@@ -200,6 +203,7 @@ xcopy /Y /E /I "$(ProjectDir)Asset" "$(OutDir)Asset"</Command>
     <ClInclude Include="Core\Object\Transform.h" />
     <ClInclude Include="Core\Math\Vector3.h" />
     <ClInclude Include="Game\Components\CameraShake.h" />
+    <ClInclude Include="Game\Components\RingGauge.h" />
     <ClInclude Include="Game\Components\TrailRenderer.h" />
     <ClInclude Include="Game\UI\CountDownUI.h" />
     <ClInclude Include="Game\Components\CpuAI.h" />
@@ -233,6 +237,22 @@ xcopy /Y /E /I "$(ProjectDir)Asset" "$(OutDir)Asset"</Command>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
     </FxCompile>
     <FxCompile Include="Shader\FieldVertexShader.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="Shader\GaugePixelShader.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="Shader\GaugeVertexShader.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
